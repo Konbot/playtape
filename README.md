@@ -115,3 +115,5 @@ before you change it. Issues and PRs welcome; this is early and evolving.
 
 MIT — see [LICENSE](LICENSE). The bundled MP3 encoder (`lame.min.js`) is
 LGPL v3, used unmodified; see the notice at the bottom of the LICENSE file.
+
+Created by **Konstantinos Skopas** and **Koncave Design Studio**.
