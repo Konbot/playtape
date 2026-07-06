@@ -13,3 +13,6 @@ browser-profile-playtape/
 Thumbs.db
 Desktop.ini
 .DS_Store
+~$*.md
+~$*.docx
+_unpack_tmp/
