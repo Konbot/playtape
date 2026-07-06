@@ -1,0 +1,15 @@
+# local runtime state — never part of the source
+launcher.log
+chrome-profile/
+browser-profile/
+browser-profile-playtape/
+
+# user projects if someone works inside a checkout
+*.tape
+/projects/
+/my-songs/
+
+# OS cruft
+Thumbs.db
+Desktop.ini
+.DS_Store
