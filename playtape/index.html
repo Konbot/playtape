@@ -39,7 +39,9 @@
   /* ---- top file bar ---- */
   .topbar{background:var(--face);border-bottom:1px solid var(--face-edge);
     padding:8px 16px;display:flex;align-items:center;gap:10px;font-size:13px}
-  .topbar .pname{font-family:ui-monospace,monospace;color:var(--ink);font-weight:700;letter-spacing:.04em}
+  .topbar .pname{font-family:ui-monospace,monospace;color:var(--ink);font-weight:700;letter-spacing:.04em;
+    min-width:0;flex:0 1 auto;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .topbar .menu-btn{flex:0 0 auto}
   .topbar .pname .dirty{color:var(--sig);margin-left:4px}
   .menu-btn{background:transparent;border:0;color:var(--muted);padding:6px 12px;cursor:pointer;border-radius:99px;
     font-size:12px;font-family:ui-monospace,monospace;letter-spacing:.06em;font-weight:600}
@@ -122,7 +124,8 @@
   .ruler{flex:1;overflow:hidden;position:relative;height:28px;background:var(--deck-hi);cursor:pointer}
   .ruler canvas{display:block}
   .clipbar{display:flex;gap:6px;align-items:center;padding:7px 10px;
-    background:var(--face);border-bottom:1px solid var(--face-edge)}
+    background:var(--face);border-bottom:1px solid var(--face-edge);overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .clipbar .btn{flex-shrink:0}
   .clipbar .label{margin-right:4px}
   .lanes{flex:1;display:flex;overflow:hidden;min-height:0}
   .heads{width:240px;min-width:240px;overflow-y:auto;border-right:1px solid var(--deck-edge);
@@ -153,7 +156,7 @@
     text-transform:uppercase;letter-spacing:.08em;pointer-events:none;color:#fff!important;text-shadow:0 1px 3px rgba(0,0,0,.8);opacity:.9}
   .clip .handle{position:absolute;top:0;bottom:0;width:10px;cursor:ew-resize;background:rgba(255,255,255,.08)}
   .clip .handle.l{left:0} .clip .handle.r{right:0} .clip .handle:hover{background:rgba(255,255,255,.28)}
-  .empty-hint{margin:34px auto;max-width:520px;padding:26px 30px;color:#B9BAB6;text-align:center;font-size:14px;line-height:2;
+  .empty-hint{margin:34px auto;max-width:min(520px,88vw);padding:26px 30px;color:#B9BAB6;text-align:center;font-size:14px;line-height:2;
     background:rgba(255,255,255,.04);border:1px dashed rgba(255,255,255,.18);border-radius:18px}
   .empty-hint b{color:#fff} .empty-hint .opt{display:inline-block;margin:0 12px}
   .empty-hint .label{color:#8a8b90}
@@ -283,10 +286,10 @@
 
   /* drum machine: dark pad matrix, lit steps */
   .dgrid{display:flex;flex-direction:column;gap:6px;background:var(--deck);border-radius:16px;padding:12px;border:1px solid var(--deck-edge);
-    box-shadow:inset 0 3px 10px rgba(0,0,0,.5)}
-  .drow{display:flex;gap:5px;align-items:center}
-  .dname{width:56px;font-family:ui-monospace,monospace;font-size:10px;font-weight:700;letter-spacing:.08em;color:#9a9ba0}
-  .dcell{flex:1;height:34px;background:var(--deck-hi);border:1px solid rgba(255,255,255,.07);
+    box-shadow:inset 0 3px 10px rgba(0,0,0,.5);overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .drow{display:flex;gap:5px;align-items:center;width:max-content;min-width:100%;box-sizing:border-box}
+  .dname{width:56px;flex-shrink:0;font-family:ui-monospace,monospace;font-size:10px;font-weight:700;letter-spacing:.08em;color:#9a9ba0}
+  .dcell{flex:1 0 30px;min-width:30px;height:34px;background:var(--deck-hi);border:1px solid rgba(255,255,255,.07);
     border-radius:8px;cursor:pointer;box-shadow:0 2px 0 rgba(0,0,0,.4);transition:var(--keytravel)}
   .dcell.beat{background:#2e2f34}
   .dcell:hover{border-color:rgba(255,255,255,.25)}
@@ -301,7 +304,7 @@
   /* pocket synth strip */
   .stylo-keys{position:relative;height:128px;background:var(--deck);border-radius:16px;padding:10px;
     display:flex;gap:3px;overflow-x:auto;user-select:none;touch-action:none;border:1px solid var(--deck-edge);box-shadow:inset 0 3px 12px rgba(0,0,0,.55)}
-  .spad{flex:1 0 32px;min-width:32px;height:100%;border-radius:8px;border:1px solid rgba(0,0,0,.4);cursor:pointer;
+  .spad{flex:1 0 38px;min-width:38px;height:100%;border-radius:8px;border:1px solid rgba(0,0,0,.4);cursor:pointer;
     display:flex;align-items:flex-end;justify-content:center;padding-bottom:8px;font-family:ui-monospace,monospace;font-size:8px;font-weight:700;
     letter-spacing:.04em;color:rgba(255,255,255,.9);position:relative;transition:filter .04s,transform .04s}
   .spad.sharp{align-self:flex-start;height:62%}
@@ -315,12 +318,12 @@
   /* ================= KEYS bed ================= */
   .pkbed{position:relative;height:150px;background:var(--deck);border-radius:16px;padding:8px 8px 6px;
     display:flex;user-select:none;touch-action:none;border:1px solid var(--deck-edge);box-shadow:inset 0 3px 12px rgba(0,0,0,.55);overflow-x:auto}
-  .pkey{position:relative;flex:1 0 34px;min-width:34px;margin:0 1px;border-radius:0 0 8px 8px;cursor:pointer;
+  .pkey{position:relative;flex:1 0 42px;min-width:42px;margin:0 2px;border-radius:0 0 8px 8px;cursor:pointer;
     background:linear-gradient(180deg,#FFFFFF 0,#F4F4F1 70%,#DEDED8);border:1px solid #c9c9c2;
     box-shadow:0 4px 0 #c9c9c2,0 5px 8px rgba(0,0,0,.45);transition:var(--keytravel);
     display:flex;align-items:flex-end;justify-content:center;padding-bottom:6px;font-family:ui-monospace,monospace;font-size:8px;font-weight:700;color:#a7a79f}
   .pkey.held,.pkey:active{transform:translateY(3px);box-shadow:0 1px 0 #c9c9c2;background:linear-gradient(180deg,#ffd9c7,#ffc4a8)}
-  .pkey.black{position:absolute;top:8px;width:24px;height:58%;margin:0;z-index:2;border-radius:0 0 6px 6px;
+  .pkey.black{position:absolute;top:8px;width:20px;height:48%;margin:0;z-index:2;border-radius:0 0 6px 6px;
     background:linear-gradient(180deg,#34353a,var(--deck-hi) 60%,#0f1013);border:1px solid #0b0c0e;color:#777;
     box-shadow:0 4px 0 #0b0c0e,0 5px 8px rgba(0,0,0,.55)}
   .pkey.black.held,.pkey.black:active{transform:translateY(3px);box-shadow:0 1px 0 #0b0c0e;background:linear-gradient(180deg,#4a3f3a,#2c2320)}
@@ -335,7 +338,7 @@
   .shelf-title{margin:48px 0 6px;font-weight:900;letter-spacing:.14em;font-size:34px;color:#fff}
   .shelf-title b{color:var(--sig)}
   .shelf-sub{font-family:ui-monospace,monospace;font-size:10px;font-weight:700;letter-spacing:.30em;color:#8a8b90;text-transform:uppercase;margin-bottom:38px}
-  .shelf-row{display:flex;gap:22px;flex-wrap:wrap;justify-content:center;max-width:920px;padding:0 20px 26px;position:relative}
+  .shelf-row{display:flex;gap:22px;flex-wrap:wrap;justify-content:center;width:100%;max-width:920px;padding:0 20px 26px;position:relative;box-sizing:border-box}
   .shelf-board{width:min(920px,94vw);height:12px;border-radius:99px;margin:-8px 0 36px;
     background:linear-gradient(180deg,#33343a,#26272b);box-shadow:0 8px 16px rgba(0,0,0,.5),0 1px 0 rgba(255,255,255,.08) inset}
   .cassette{width:200px;height:130px;border-radius:14px;cursor:pointer;position:relative;padding:10px;
@@ -361,7 +364,7 @@
     border:1px solid rgba(0,0,0,.15)}
   .cassette .rx2{position:absolute;top:6px;left:8px;color:#9a9a94;font-size:12px;padding:2px 6px;border-radius:6px;display:none}
   .cassette:hover .rx2{display:block} .cassette .rx2:hover{background:var(--rec);color:#fff}
-  .shelf-actions{display:flex;gap:12px;margin:2px 0 44px}
+  .shelf-actions{display:flex;gap:12px;margin:2px 0 44px;flex-wrap:wrap;justify-content:center;width:100%;padding:0 20px;box-sizing:border-box}
 
   /* stage selector: three module cards with LED strips */
   .woodsel{display:flex;gap:10px}
@@ -414,6 +417,9 @@
   #mixerPanel.collapsed{height:0;min-height:0;padding:0;border-top:0;overflow:hidden}
 
   @media (max-width:700px){
+    .topbar{padding:6px 8px;gap:4px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+    .topbar .pname{max-width:72px}
+    .topbar .menu-btn{padding:5px 7px;font-size:10px;letter-spacing:.02em;white-space:nowrap}
     header{padding:8px 10px;gap:10px}
     .brand .sub{display:none} .brand .name{font-size:17px;letter-spacing:.08em}
     .counter{font-size:17px;min-width:108px;padding:6px 10px}
@@ -2161,7 +2167,7 @@ function renderKeysBed(){ const bed=$('keysBed'); if(!bed)return; bed.innerHTML=
     const w=document.createElement('div'); w.className='pkey'; w.dataset.midi=midi;
     if(pc===0)w.textContent='C'+(Math.floor(midi/12)-1);
     if(i<24&&SHARP[((midi+1)%12+12)%12]){
-      const b=document.createElement('div'); b.className='pkey black'; b.dataset.midi=midi+1; b.style.right='-13px';
+      const b=document.createElement('div'); b.className='pkey black'; b.dataset.midi=midi+1; b.style.right='-11px';
       w.appendChild(b);
     }
     bed.appendChild(w);
