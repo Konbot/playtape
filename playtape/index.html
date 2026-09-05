@@ -17,10 +17,10 @@
   :root{
     --face:#ECECE8; --face-hi:#F8F8F5; --face-lo:#D8D8D2; --face-edge:#BFBFB8;
     --deck:#1B1C1F; --deck-hi:#26272B; --deck-lo:#141518; --deck-edge:#0D0E10;
-    --ink:#232428; --muted:#787A76; --paperink:#E8E9E6;
+    --ink:#232428; --muted:#75777D; --paperink:#E8E9E6;
     --sig:#FF5C1F; --sig-hi:#FF7C46; --sig-lo:#D6440D;
     --rec:#FF3B30; --led-red:#FF453A; --led-green:#30D65C; --led-amber:#FFB020;
-    --signal:var(--sig); --green:#23A852; --blue:#3D7BFF; --yellow:#E9A100; --purple:#8B5CF6;
+    --signal:var(--sig); --green:#23A852; --blue:#3D7BFF; --blue-hi:#6696FF; --blue-lo:#2456C4; --yellow:#E9A100; --purple:#8B5CF6;
     /* track colours: saturated but friendly, read on dark glass */
     --t1:#FF5C1F; --t2:#3D7BFF; --t3:#8B5CF6; --t4:#2FD463;
     --t5:#FFB020; --t6:#FF4F87; --t7:#1CC8C8; --t8:#B8C24A;
@@ -55,8 +55,8 @@
     box-shadow:0 1px 0 rgba(255,255,255,.8) inset,0 4px 10px rgba(0,0,0,.06);
     padding:14px 18px;display:flex;align-items:center;gap:20px;flex-wrap:wrap}
   .brand{display:flex;flex-direction:column;align-items:flex-start;line-height:1;user-select:none}
-  .brand .logo-badge{background:var(--blue);border-radius:11px;padding:8px 13px;display:inline-flex;
-    box-shadow:0 2px 0 #2456c4,0 1px 0 rgba(255,255,255,.6) inset}
+  .brand .logo-badge{background:linear-gradient(180deg,var(--blue-hi),var(--blue) 70%,var(--blue-lo));border-radius:11px;padding:8px 13px;display:inline-flex;
+    box-shadow:0 2px 0 var(--blue-lo),0 1px 0 rgba(255,255,255,.6) inset}
   .brand .logo-badge svg{display:block;height:22px;width:auto}
   .brand .sub{font-size:9px;letter-spacing:.30em;color:var(--muted);text-transform:uppercase;margin-top:6px;font-weight:700}
 
@@ -216,7 +216,7 @@
     color:var(--muted);border-radius:9px;padding:6px;cursor:pointer;font-family:ui-monospace,monospace;font-size:9px;font-weight:700;
     letter-spacing:.08em;box-shadow:0 2px 0 var(--face-lo)}
   .lcbtn:hover{color:var(--ink)}
-  .lcbtn.on{background:var(--blue);color:#fff;border-color:#2456c4;box-shadow:0 2px 0 #2456c4}
+  .lcbtn.on{background:var(--blue);color:#fff;border-color:var(--blue-lo);box-shadow:0 2px 0 var(--blue-lo)}
   .fxbtn{width:100%;background:var(--face-hi);border:1px solid var(--face-edge);
     color:var(--muted);border-radius:9px;padding:7px;cursor:pointer;font-family:ui-monospace,monospace;font-size:10px;font-weight:700;
     letter-spacing:.1em;box-shadow:0 2px 0 var(--face-lo)}
@@ -339,13 +339,13 @@
     background:var(--deck) var(--dots);background-size:26px 26px}
   #shelf.open{display:flex}
   .shelf-title{margin:48px 0 6px}
-  .shelf-title .logo-badge{background:var(--blue);border-radius:16px;padding:13px 20px;display:inline-flex;
-    box-shadow:0 3px 0 #2456c4,0 1px 0 rgba(255,255,255,.6) inset}
+  .shelf-title .logo-badge{background:linear-gradient(180deg,var(--blue-hi),var(--blue) 70%,var(--blue-lo));border-radius:16px;padding:13px 20px;display:inline-flex;
+    box-shadow:0 3px 0 var(--blue-lo),0 1px 0 rgba(255,255,255,.6) inset}
   .shelf-title .logo-badge svg{display:block;height:38px;width:auto}
   .shelf-sub{font-family:ui-monospace,monospace;font-size:10px;font-weight:700;letter-spacing:.30em;color:#8a8b90;text-transform:uppercase;margin-bottom:38px}
   .shelf-row{display:flex;gap:22px;flex-wrap:wrap;justify-content:center;width:100%;max-width:920px;padding:0 20px 26px;position:relative;box-sizing:border-box}
   .shelf-board{width:min(920px,94vw);height:12px;border-radius:99px;margin:-8px 0 36px;
-    background:linear-gradient(180deg,#33343a,#26272b);box-shadow:0 8px 16px rgba(0,0,0,.5),0 1px 0 rgba(255,255,255,.08) inset}
+    background:linear-gradient(180deg,#2F3441,#212530);box-shadow:0 8px 16px rgba(0,0,0,.5),0 1px 0 rgba(255,255,255,.08) inset}
   .cassette{width:200px;height:130px;border-radius:14px;cursor:pointer;position:relative;padding:10px;
     background:linear-gradient(180deg,var(--face-hi),var(--face) 70%,var(--face-lo));border:1px solid var(--face-edge);
     box-shadow:0 5px 0 var(--face-lo),0 12px 22px rgba(0,0,0,.5),0 1px 0 rgba(255,255,255,.9) inset;
