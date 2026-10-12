@@ -477,6 +477,7 @@
   <div class="group"><span class="label">input device</span>
     <div class="row">
       <select id="inputSel"><option value="">Default input</option></select>
+      <select id="chanSel" title="An interface shows up as one device; pick the socket your guitar or mic is plugged into"><option value="2">Both inputs</option><option value="0">Input 1 (left)</option><option value="1">Input 2 (right)</option></select>
       <button class="btn" id="enableBtn">Enable input</button>
     </div>
   </div>
@@ -1639,18 +1640,21 @@ async function enableInput(){
     setStatus('Input ready — pick a device if you have several, then hit ●.','ok');
   }catch(e){ setStatus('Could not access input: '+e.message); }
 }
-async function getStream(){ const id=$('inputSel').value; const c={audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false,latency:0}}; if(id)c.audio.deviceId={exact:id}; return navigator.mediaDevices.getUserMedia(c); }
+async function getStream(){ const id=$('inputSel').value; const c={audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false,latency:0,channelCount:{ideal:2}}}; if(id)c.audio.deviceId={exact:id}; return navigator.mediaDevices.getUserMedia(c); }
 
 /* AudioWorklet capture — gives sample-accurate alignment (MediaRecorder cannot) */
 const REC_WORKLET_CODE=`
 class RecProcessor extends AudioWorkletProcessor{
   constructor(){super();this.recording=false;this.buf=[];this.count=0;this.batch=16384;this.started=false;
-    this.port.onmessage=(e)=>{ if(e.data.cmd==='start'){this.recording=true;this.started=false;this.buf=[];this.count=0;}
+    this.mode=2;
+    this.port.onmessage=(e)=>{ if(e.data.cmd==='start'){this.recording=true;this.started=false;this.buf=[];this.count=0;this.mode=e.data.mode===undefined?2:e.data.mode;}
       else if(e.data.cmd==='stop'){this.recording=false;this.flush();this.port.postMessage({type:'stopped'});} };}
   flush(){ if(!this.buf.length)return; let total=0; for(const a of this.buf)total+=a.length; const out=new Float32Array(total); let o=0; for(const a of this.buf){out.set(a,o);o+=a.length;} this.buf=[];this.count=0; this.port.postMessage({type:'data',samples:out},[out.buffer]); }
   process(inputs){ const input=inputs[0];
     if(this.recording&&input&&input[0]){ if(!this.started){this.started=true;this.port.postMessage({type:'started',frame:currentFrame});}
-      const ch=input[0]; const copy=new Float32Array(ch.length); copy.set(ch); this.buf.push(copy); this.count+=copy.length; if(this.count>=this.batch)this.flush(); }
+      const a=input[0], b=input[1]; const copy=new Float32Array(a.length);
+      if(this.mode===1&&b)copy.set(b); else if(this.mode===0||!b)copy.set(a); else for(let i=0;i<a.length;i++)copy[i]=(a[i]+b[i])*0.5;
+      this.buf.push(copy); this.count+=copy.length; if(this.count>=this.batch)this.flush(); }
     return true; }
 }
 registerProcessor('rec-processor',RecProcessor);`;
@@ -1706,7 +1710,7 @@ async function startRecording(){
   recBlocks=[]; recStartFrame=null; recStream=stream;
   recMicSource=ctx.createMediaStreamSource(stream);
   recAnalyser=ctx.createAnalyser(); recAnalyser.fftSize=256; recMicSource.connect(recAnalyser);
-  recNode=new AudioWorkletNode(ctx,'rec-processor',{numberOfInputs:1,numberOfOutputs:1,outputChannelCount:[1],channelCount:1,channelCountMode:'explicit'});
+  recNode=new AudioWorkletNode(ctx,'rec-processor',{numberOfInputs:1,numberOfOutputs:1,outputChannelCount:[1],channelCount:2,channelCountMode:'explicit'});
   recSilent=ctx.createGain(); recSilent.gain.value=0;
   recMicSource.connect(recNode); recNode.connect(recSilent); recSilent.connect(ctx.destination);
   recNode.port.onmessage=(e)=>{ const d=e.data;
@@ -1717,7 +1721,7 @@ async function startRecording(){
   setStatus(punchA!=null?('● Punch-in: recording '+punchA.toFixed(1)+'s → '+punchB.toFixed(1)+'s into "'+recArmTrack.name+'" (pre-roll running)…'):('● Recording into "'+recArmTrack.name+'"…'),'live');
   startPlayback(true);
   // capture starts immediately; anything before the downbeat (count-in, latency offset) is trimmed off in finalize
-  recNode.port.postMessage({cmd:'start'});
+  recNode.port.postMessage({cmd:'start',mode:parseInt($('chanSel').value)});
 }
 function finishRecording(){
   if(recNode){ try{ recNode.port.postMessage({cmd:'stop'}); }catch(e){ finalizeWorkletRecording(); } recording=false; return; }
@@ -2287,6 +2291,7 @@ $('addBtn').onclick=()=>{ensureCtx();pushUndo();addTrack({arm:!tracks.some(t=>t.
 $('importBtn').onclick=()=>$('fileInput').click();
 $('fileInput').onchange=e=>{importFiles(e.target.files);e.target.value='';};
 if(navigator.mediaDevices){ refreshDevices(); if(navigator.mediaDevices.addEventListener)navigator.mediaDevices.addEventListener('devicechange',refreshDevices); }
+$('chanSel').value=lsGet('playtape_chan','2'); $('chanSel').onchange=e=>lsSet('playtape_chan',e.target.value);
 $('enableBtn').onclick=enableInput; $('exportBtn').onclick=bounce; $('stemsBtn').onclick=exportStems; $('tunerBtn').onclick=openTuner;
 $('recOff').onchange=e=>{ recOffsetMs=clamp(parseInt(e.target.value)||0,-200,500); e.target.value=recOffsetMs; lsSet('tape_recOffsetMs',String(recOffsetMs)); };
 $('calibBtn').onclick=calibrate;
