@@ -2286,6 +2286,7 @@ function setStatus(m,cls){ const el=$('status'); if(cls==='live')el.innerHTML='<
 $('addBtn').onclick=()=>{ensureCtx();pushUndo();addTrack({arm:!tracks.some(t=>t.arm)});};
 $('importBtn').onclick=()=>$('fileInput').click();
 $('fileInput').onchange=e=>{importFiles(e.target.files);e.target.value='';};
+if(navigator.mediaDevices){ refreshDevices(); if(navigator.mediaDevices.addEventListener)navigator.mediaDevices.addEventListener('devicechange',refreshDevices); }
 $('enableBtn').onclick=enableInput; $('exportBtn').onclick=bounce; $('stemsBtn').onclick=exportStems; $('tunerBtn').onclick=openTuner;
 $('recOff').onchange=e=>{ recOffsetMs=clamp(parseInt(e.target.value)||0,-200,500); e.target.value=recOffsetMs; lsSet('tape_recOffsetMs',String(recOffsetMs)); };
 $('calibBtn').onclick=calibrate;
