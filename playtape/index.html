@@ -1035,7 +1035,18 @@ let drumPattern={kick:Array(16).fill(false),snare:Array(16).fill(false),hatC:Arr
 let drumLive=false, drumVol=0.9, drumBus=null, drumTimer=null, drumStep=0, nextDrumTime=0, drumPreviewTimer=null, drumPreviewStep=0, nextPreviewTime=0;
 let projectHandle=null, projectName='Untitled', dirty=false, pendingAfterSave=null;
 let undoStack=[], selClip=null, clipboard=null;
-let recOffsetMs=0, recCaptureCtxTime=null, snapOn=false, calibrating=false;
+let recOffsetMs=0, recCaptureCtxTime=null, snapOn=false, calibrating=false, offsetCalibrated=false, recInLatency=0;
+/* latency is a property of the input device, so the offset is stored per device */
+function offsetKey(){ return 'tape_recOffsetMs:'+($('inputSel').value||'default'); }
+function loadOffset(){
+  let s=lsGet(offsetKey(),null);
+  if(s==null&&!$('inputSel').value)s=lsGet('tape_recOffsetMs',null);
+  offsetCalibrated=s!=null;
+  recOffsetMs=offsetCalibrated?(parseInt(s)||0):Math.round(estLatency*1000);
+  const f=$('recOff'); if(f){ f.value=recOffsetMs; f.title=offsetCalibrated?'Latency offset for this input (ms)':'Estimated offset for this input (ms) — run Calibrate for accuracy'; }
+}
+function saveOffset(ms){ recOffsetMs=ms; offsetCalibrated=true; loadOffsetUI(); lsSet(offsetKey(),String(ms)); }
+function loadOffsetUI(){ const f=$('recOff'); if(f){ f.value=recOffsetMs; f.title='Latency offset for this input (ms)'; } }
 let loopOn=false, loopA=0, loopB=0, punchA=null, punchB=null, transportTimer=null;
 function loopValid(){ return loopB>loopA+0.1; }
 let changeCounter=0, autosavedAt=0;
@@ -1061,7 +1072,7 @@ function ensureCtx(){
   reverbConv.connect(reverbReturn); reverbReturn.connect(masterGain);
   drumBus=ctx.createGain(); drumBus.gain.value=drumVol; drumBus.connect(masterGain);
   estLatency=(ctx.baseLatency||0)+(ctx.outputLatency||0);
-  if(lsGet('tape_recOffsetMs',null)==null && recOffsetMs===0){ recOffsetMs=Math.round(estLatency*1000); const f=$('recOff'); if(f)f.value=recOffsetMs; }
+  if(!offsetCalibrated)loadOffset();
 }
 function makeIR(actx,type){
   const rate=actx.sampleRate; let dur=1.2,decay=2.5,bright=1,echoes=null;
@@ -1631,6 +1642,7 @@ async function refreshDevices(){
     const def=document.createElement('option'); def.value=''; def.textContent='Default input'; sel.appendChild(def);
     devices.filter(d=>d.kind==='audioinput'&&d.deviceId).forEach(d=>{const o=document.createElement('option');o.value=d.deviceId;o.textContent=d.label||('Input '+(sel.length));sel.appendChild(o);});
     if(cur&&[...sel.options].some(o=>o.value===cur))sel.value=cur;
+    if(sel.value!==cur)loadOffset();
   }catch(e){}
 }
 async function enableInput(){
@@ -1677,6 +1689,8 @@ function finalizeWorkletRecording(){
   const data=new Float32Array(total); let o=0; blocks.forEach(b=>{data.set(b,o);o+=b.length;});
   const sr=ctx.sampleRate; const buf=ctx.createBuffer(1,data.length,sr); buf.copyToChannel(data,0);
   const t=recArmTrack; const bufId=registerBuffer(buf,{fromRecording:true});
+  // uncalibrated input: output latency is only reported once audio has played, so estimate now, adding the input's own latency
+  if(!offsetCalibrated){ recOffsetMs=Math.round(((ctx.baseLatency||0)+(ctx.outputLatency||0)+recInLatency)*1000); const f=$('recOff'); if(f)f.value=recOffsetMs; }
   const off=recOffsetMs/1000; const startTime=startFrame/sr;
   let pos=playStartHead+(startTime-playStartCtx)-off, ts=0;
   if(pos<0){ ts=Math.min(-pos,Math.max(0,buf.duration-0.05)); pos=0; } // capture began before the downbeat: trim, don't shift
@@ -1692,11 +1706,11 @@ function analyzeCalibration(data,startFrame,sr,emits){
   if(startFrame==null||!data.length){ setStatus('Calibration failed: no audio captured.'); return; }
   const onsets=detectOnsets(data,sr); const detTimes=onsets.map(si=>startFrame/sr+si/sr); const Ls=[];
   emits.forEach(et=>{ let best=null; for(const dt of detTimes){ const d=dt-et; if(d>0.002&&d<0.4){ if(best==null||d<best)best=d; } } if(best!=null)Ls.push(best); });
-  if(Ls.length<3){ setStatus('Heard only '+Ls.length+'/'+emits.length+' clicks. Turn up monitoring or hold an earcup to the mic, then retry Calibrate.'); return; }
+  if(Ls.length<3){ setStatus('Heard only '+Ls.length+'/'+emits.length+' clicks. The clicks must reach the input you picked: hold an earcup to a mic, or for a guitar interface run a cable from its output into that input (gain right down), then retry. Or set the offset by ear.'); return; }
   Ls.sort((a,b)=>a-b); const med=Ls[Math.floor(Ls.length/2)]; const ms=Math.round(med*1000);
   if(ms<1||ms>500){ setStatus('Measured '+ms+'ms — looks wrong. Retry, or set the offset manually.'); return; }
-  recOffsetMs=ms; $('recOff').value=ms; lsSet('tape_recOffsetMs',String(ms));
-  setStatus('Round-trip latency measured: '+ms+'ms — auto-applied to every take ✓','ok');
+  saveOffset(ms);
+  setStatus('Round-trip latency measured: '+ms+'ms — saved for this input and applied to every take ✓','ok');
 }
 async function startRecording(){
   if(recStarting||recording)return; recStarting=true;
@@ -1705,6 +1719,7 @@ async function startRecording(){
   if(!haveWorklet){ await startRecordingMR(); recStarting=false; return; }
   let stream; try{ stream=await getStream(); }catch(e){ recStarting=false; setStatus('Mic error: '+e.message+' — check mic permission / input device.'); return; }
   refreshDevices();
+  { const tr=stream.getAudioTracks()[0]; recInLatency=(tr&&tr.getSettings&&tr.getSettings().latency)||0; }
   pushUndo(); recArmTrack=tracks.find(t=>t.arm)||addTrack({arm:true});
   armPunch();
   recBlocks=[]; recStartFrame=null; recStream=stream;
@@ -1795,7 +1810,7 @@ async function calibrate(){
   let stream; try{ stream=await getStream(); }catch(e){ setStatus('Mic error: '+e.message+' — Enable input first.'); return; }
   calibrating=true; setStatus('● Measuring latency — make sure the mic can hear the clicks (earcup to mic if on headphones)…','live');
   const src=ctx.createMediaStreamSource(stream);
-  const node=new AudioWorkletNode(ctx,'rec-processor',{numberOfInputs:1,numberOfOutputs:1,outputChannelCount:[1],channelCount:1,channelCountMode:'explicit'});
+  const node=new AudioWorkletNode(ctx,'rec-processor',{numberOfInputs:1,numberOfOutputs:1,outputChannelCount:[1],channelCount:2,channelCountMode:'explicit'});
   const sink=ctx.createGain(); sink.gain.value=0; src.connect(node); node.connect(sink); sink.connect(ctx.destination);
   const blocks=[]; let startFrame=null; const emits=[]; const beat=0.5, beats=8;
   node.port.onmessage=(e)=>{ const d=e.data;
@@ -1803,7 +1818,7 @@ async function calibrate(){
     else if(d.type==='data'){ blocks.push(d.samples); }
     else if(d.type==='stopped'){ let total=0; blocks.forEach(b=>total+=b.length); const data=new Float32Array(total); let o=0; blocks.forEach(b=>{data.set(b,o);o+=b.length;});
       try{src.disconnect();}catch(_){} try{node.disconnect();}catch(_){} try{sink.disconnect();}catch(_){} stream.getTracks().forEach(t=>t.stop()); calibrating=false; analyzeCalibration(data,startFrame,ctx.sampleRate,emits); } };
-  node.port.postMessage({cmd:'start'});
+  node.port.postMessage({cmd:'start',mode:parseInt($('chanSel').value)});
   setTimeout(()=>{ try{ node.port.postMessage({cmd:'stop'}); }catch(e){ calibrating=false; } }, (0.3+beats*beat+0.6)*1000);
 }
 async function renderMix(trackList,withReverb,isolate,opts){
@@ -2293,7 +2308,8 @@ $('fileInput').onchange=e=>{importFiles(e.target.files);e.target.value='';};
 if(navigator.mediaDevices){ refreshDevices(); if(navigator.mediaDevices.addEventListener)navigator.mediaDevices.addEventListener('devicechange',refreshDevices); }
 $('chanSel').value=lsGet('playtape_chan','2'); $('chanSel').onchange=e=>lsSet('playtape_chan',e.target.value);
 $('enableBtn').onclick=enableInput; $('exportBtn').onclick=bounce; $('stemsBtn').onclick=exportStems; $('tunerBtn').onclick=openTuner;
-$('recOff').onchange=e=>{ recOffsetMs=clamp(parseInt(e.target.value)||0,-200,500); e.target.value=recOffsetMs; lsSet('tape_recOffsetMs',String(recOffsetMs)); };
+$('recOff').onchange=e=>{ saveOffset(clamp(parseInt(e.target.value)||0,-200,500)); };
+$('inputSel').onchange=loadOffset;
 $('calibBtn').onclick=calibrate;
 $('snapBtn').onclick=e=>{ snapOn=!snapOn; e.target.classList.toggle('on',snapOn); e.target.textContent=snapOn?'SNAP ON':'SNAP OFF'; };
 $('drumBtn').onclick=openDrums;
@@ -2381,7 +2397,7 @@ window.addEventListener('beforeunload',e=>{if(dirty){e.preventDefault();e.return
 window.addEventListener('dragover',e=>e.preventDefault());
 window.addEventListener('drop',e=>{e.preventDefault();if(e.dataTransfer.files.length)importFiles(e.dataTransfer.files);});
 renderAll();
-{ const stored=lsGet('tape_recOffsetMs',null); if(stored!=null){ recOffsetMs=parseInt(stored)||0; } const f=$('recOff'); if(f)f.value=recOffsetMs; }
+loadOffset();
 { const st=lsGet('tape_mixCollapsed',null); setMixerCollapsed(st!=null?st==='1':window.innerHeight<640); }
 setStatus('Ready! Press the red ● and make some noise — PLAYTAPE does the rest. ? for help.'+(hasFSA?'':' (Saves download as a .tape file on this browser.)'));
 /* crash recovery: offer the last unsaved backup */
