@@ -32,6 +32,15 @@ copy /Y "%~dp0tape.ico" "%DEST%\" >nul
 copy /Y "%~dp0playtape.ico" "%DEST%\" >nul 2>nul
 copy /Y "%~dp0README.txt" "%DEST%\" >nul 2>nul
 
+REM --- PLAYTAPE Next (optional): only if its single-file build exists.
+REM     Build it first: in playtape-next run "npm install" then "npm run build:single".
+set "HASNEXT="
+if exist "%~dp0playtape-next\dist-single\index.html" (
+  if not exist "%DEST%\playtape-next" mkdir "%DEST%\playtape-next"
+  copy /Y "%~dp0playtape-next\dist-single\index.html" "%DEST%\playtape-next\index.html" >nul
+  set "HASNEXT=1"
+)
+
 REM --- shortcuts: Desktop + Start Menu for both apps ---
 powershell -NoProfile -Command ^
   "$ws = New-Object -ComObject WScript.Shell;" ^
@@ -46,6 +55,15 @@ powershell -NoProfile -Command ^
   "  $s2.Description = 'PLAYTAPE - young tape machine'; $s2.Save() }"
 if errorlevel 1 ( echo  [!] Could not create shortcuts. & pause & exit /b 1 )
 
+if defined HASNEXT powershell -NoProfile -Command ^
+  "$ws = New-Object -ComObject WScript.Shell;" ^
+  "foreach($p in @([Environment]::GetFolderPath('Desktop'), (Join-Path ([Environment]::GetFolderPath('StartMenu')) 'Programs'))){" ^
+  "  $s3 = $ws.CreateShortcut((Join-Path $p 'PLAYTAPE Next.lnk'));" ^
+  "  $s3.TargetPath = '%PYW%'; $s3.Arguments = '\"%DEST%\tape_launcher.pyw\" next';" ^
+  "  $s3.WorkingDirectory = '%DEST%'; $s3.IconLocation = '%DEST%\playtape.ico';" ^
+  "  $s3.Description = 'PLAYTAPE Next - capture ideas fast'; $s3.Save() }"
+if defined HASNEXT if errorlevel 1 ( echo  [!] Could not create the PLAYTAPE Next shortcut. )
+
 REM --- uninstaller ---
 (
   echo @echo off
@@ -55,6 +73,8 @@ REM --- uninstaller ---
   echo del "%%USERPROFILE%%\Desktop\PLAYTAPE.lnk" 2^>nul
   echo del "%%APPDATA%%\Microsoft\Windows\Start Menu\Programs\TAPE.lnk" 2^>nul
   echo del "%%APPDATA%%\Microsoft\Windows\Start Menu\Programs\PLAYTAPE.lnk" 2^>nul
+  echo del "%%USERPROFILE%%\Desktop\PLAYTAPE Next.lnk" 2^>nul
+  echo del "%%APPDATA%%\Microsoft\Windows\Start Menu\Programs\PLAYTAPE Next.lnk" 2^>nul
   echo rd /s /q "%LOCALAPPDATA%\TAPE"
   echo echo Done. Your saved projects are NOT touched.
   echo pause
@@ -62,6 +82,7 @@ REM --- uninstaller ---
 
 echo.
 echo  Installed. TAPE and PLAYTAPE are on the Desktop and Start Menu.
+if defined HASNEXT echo  PLAYTAPE Next was found and installed alongside them.
 echo  (Projects are never stored inside the install folder, so
 echo   reinstalling/updating never touches your music.)
 echo.

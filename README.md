@@ -59,6 +59,27 @@ the Web Audio API.
   detents, and a value arc; keys with actual travel. Designed to feel like
   hardware, not a form.
 
+### PLAYTAPE Next — the rebuild (in progress)
+`playtape-next/` is a ground-up rebuild of PLAYTAPE around one promise:
+open it, hit one key, you are recording. It is aimed at musicians who need
+to catch an idea before it is gone, on a phone as much as on a desktop.
+
+- **A Library instead of files** — songs name and save themselves; nothing
+  asks for a folder or a file name. Every take is stored the moment it ends.
+- **Two views, no stages** — Capture (fat timeline, transport in thumb
+  reach) and Mix (channel strips, pedals).
+- **One Record key for everything** — mic, Keys or Drums, whichever source
+  is selected. Recording over a clip keeps the earlier pass as a take.
+- **A tighter engine** — gapless sample-accurate looping, a true lookahead
+  limiter, effects that respond while stopped, and exports that match what
+  you heard.
+- **Installable and offline** as a web app, and still buildable into a
+  single HTML file.
+
+It has a build step (Vite, Svelte, TypeScript), unlike the two apps above,
+and lives beside them without touching them. Manual:
+**[docs/PLAYTAPE_NEXT.md](docs/PLAYTAPE_NEXT.md)**.
+
 ## Try it
 
 **Fastest path — no install:** download this repo, then just open
@@ -72,12 +93,20 @@ both apps to `%LOCALAPPDATA%\TAPE`, and drops a TAPE and a PLAYTAPE icon on
 your Desktop and Start Menu — each opens in its own app window (no browser
 chrome), no black console window, nothing left running when you close it.
 
+**PLAYTAPE Next:** needs [Node.js](https://nodejs.org) 22.12+ once, to build
+it. In `playtape-next/` run `npm install`, then `npm run dev` to try it at
+http://127.0.0.1:5183, or `npm run build:all` to produce the single file
+(`dist-single/index.html`) and the installable web app (`dist/`). Run
+`INSTALL.bat` after building and it adds a PLAYTAPE Next icon too.
+
 Full walkthrough: **[docs/MANUAL.md](docs/MANUAL.md)**. One-page cheat
 sheet for a first session: **[docs/QUICK_REFERENCE.md](docs/QUICK_REFERENCE.md)**.
 
 ## How it's built
 
-Deliberately low-tech, on purpose:
+TAPE and PLAYTAPE are deliberately low-tech, on purpose (PLAYTAPE Next is
+the exception: modular source and a build step, see
+[playtape-next/README.md](playtape-next/README.md)):
 
 - **Single HTML file per app** — HTML, CSS, and JS together, no bundler,
   no build step, no `node_modules`. Open it in five years, it still runs.
@@ -100,7 +129,8 @@ Deliberately low-tech, on purpose:
 ```
 app/              TAPE — the full portastudio (single file: index.html)
 playtape/         PLAYTAPE — the kids' edition (single file: index.html)
-tape_launcher.pyw Local server + app-window launcher for both
+playtape-next/    PLAYTAPE Next — the rebuild (source; builds to dist/ and dist-single/)
+tape_launcher.pyw Local server + app-window launcher for all three
 INSTALL.bat        Windows installer (Desktop + Start Menu icons)
 docs/              User manual, quick reference, contributing notes
 ```

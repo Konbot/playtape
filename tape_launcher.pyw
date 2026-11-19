@@ -1,5 +1,6 @@
-# TAPE / PLAYTAPE launcher v3.1 — serves the chosen app locally and opens it
-# in its own window. Pass "playtape" as an argument for PLAYTAPE.
+# TAPE / PLAYTAPE launcher v3.2 — serves the chosen app locally and opens it
+# in its own window. Pass "playtape" as an argument for PLAYTAPE, or "next"
+# for PLAYTAPE Next (the single-file build of playtape-next/).
 # Hardened: no port squatting, reuses a healthy running server, health-checks
 # itself, falls back to file:// if serving misbehaves, logs every run to
 # launcher.log beside this file.
@@ -16,14 +17,18 @@ import ctypes
 import urllib.request
 
 BASE = os.path.dirname(os.path.abspath(__file__))
-IS_PLAY = 'playtape' in [a.lower() for a in sys.argv[1:]]
-APP_TITLE = 'PLAYTAPE' if IS_PLAY else 'TAPE'
-APP_DIR = os.path.join(BASE, 'playtape' if IS_PLAY else 'app')
+ARGS = [a.lower() for a in sys.argv[1:]]
+IS_NEXT = 'next' in ARGS
+IS_PLAY = 'playtape' in ARGS and not IS_NEXT
+APP_TITLE = 'PLAYTAPE Next' if IS_NEXT else ('PLAYTAPE' if IS_PLAY else 'TAPE')
+APP_DIR = os.path.join(BASE, 'playtape-next' if IS_NEXT else ('playtape' if IS_PLAY else 'app'))
 INDEX = os.path.join(APP_DIR, 'index.html')
-MARK = 'PLAYTAPE' if IS_PLAY else 'TAPE — multitrack recorder'
-PORT0 = 8815 if IS_PLAY else 8765          # separate ranges so both can run
+MARK = 'PLAYTAPE' if (IS_PLAY or IS_NEXT) else 'TAPE — multitrack recorder'
+# separate port ranges so all three can run at once
+PORT0 = 8865 if IS_NEXT else (8815 if IS_PLAY else 8765)
 DATA_DIR = os.path.join(os.environ.get('LOCALAPPDATA', BASE), 'TAPE')
-PROFILE = os.path.join(DATA_DIR, 'browser-profile-playtape' if IS_PLAY else 'browser-profile')
+PROFILE = os.path.join(DATA_DIR, 'browser-profile-playtape-next' if IS_NEXT
+                       else ('browser-profile-playtape' if IS_PLAY else 'browser-profile'))
 
 
 def log(msg):

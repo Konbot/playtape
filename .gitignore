@@ -3,6 +3,7 @@ launcher.log
 chrome-profile/
 browser-profile/
 browser-profile-playtape/
+browser-profile-playtape-next/
 
 # user projects if someone works inside a checkout
 *.tape

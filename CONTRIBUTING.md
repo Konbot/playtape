@@ -28,6 +28,52 @@ encoder or the offline render graph), check whether the same bug exists in
 the other file — it probably does, and both should stay bug-for-bug
 compatible so a PLAYTAPE project keeps opening cleanly in TAPE.
 
+## PLAYTAPE Next is the exception
+
+`playtape-next/` is a rebuild of PLAYTAPE and it does have a build step:
+Vite, Svelte 5 and TypeScript, with the engine, model, storage and UI as
+separate modules. The single-file property is kept as a build target
+(`npm run build:single` writes one self-contained `dist-single/index.html`),
+not as a way of writing the source.
+
+Working on it:
+
+```
+cd playtape-next
+npm install
+npm run dev      # http://127.0.0.1:5183
+npm test         # unit tests (Vitest)
+npm run check    # type check
+npm run build:all
+```
+
+What carries over unchanged from the rest of this file:
+
+- **Project compatibility.** `src/model/legacy.ts` converts to and from the
+  shared `project.json` v4 shape, and a round-trip test guards it. The fields
+  TAPE reads on a clip always describe the take that is playing; anything new
+  rides along as data TAPE ignores, or under the `playtape` key.
+- **Calm mode kills everything.** Motion is switched off by `data-calm` on
+  the root element and by `prefers-reduced-motion`. A new animation must obey
+  both.
+- **The ceiling and the limiter cannot be bypassed.** The limiter is an
+  AudioWorklet (`src/audio/worklets/limiter.worklet.js`) used by live playback
+  and by the offline render alike.
+- **No gamification.** The sticker on an exported song's cassette is still
+  the whole reward system.
+
+What is different:
+
+- There are no stages. Capture and Mix are two views of the same song.
+- Engine code is not copy-shared with TAPE any more, so an engine fix here
+  does not need mirroring, and a fix in `app/index.html` does not arrive here
+  by itself.
+- Every action that creates something (a song, a track) has a visible **+**
+  control. Do not hide creation behind a gesture or a menu alone.
+- Test through the real controls, as below. In development `window.__pt`
+  exposes the app state and engine for inspection; do not import the state
+  module a second time from the console, that creates a duplicate instance.
+
 ## Before you change UI code
 
 Both apps share one hard rule: **project files must stay compatible in both
@@ -56,8 +102,9 @@ they're the actual point of the app:
 
 ## Testing changes
 
-There's no test suite (yet — see Issues if you want to add one). What exists
-today is manual verification against a running instance:
+TAPE and PLAYTAPE have no test suite (PLAYTAPE Next has unit tests for its
+model, storage and limiter; run `npm test` there). For the two single-file
+apps, what exists today is manual verification against a running instance:
 
 1. Open the file directly in Chrome or Edge, or serve it with
    `python -m http.server` from its folder (recommended — some features,

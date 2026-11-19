@@ -3,6 +3,10 @@
 This covers both apps. If a section is PLAYTAPE-only or TAPE-only, it says
 so; everything else applies equally, since they share one engine.
 
+> **PLAYTAPE Next**, the rebuild in `playtape-next/`, works differently
+> (a Library instead of the Shelf, no stages, nothing to save) and has its own
+> manual: **[PLAYTAPE_NEXT.md](PLAYTAPE_NEXT.md)**.
+
 ## Contents
 
 - [Installing](#installing)
@@ -43,6 +47,8 @@ then visit `http://localhost:8080` in your browser.
 2. Copies both apps into `%LOCALAPPDATA%\TAPE`.
 3. Creates a **TAPE** and a **PLAYTAPE** icon on your Desktop and in the
    Start Menu, each with its own icon.
+4. If PLAYTAPE Next has been built (see [PLAYTAPE_NEXT.md](PLAYTAPE_NEXT.md)),
+   adds a **PLAYTAPE Next** icon as well. Otherwise this step is skipped.
 
 Clicking either icon starts a tiny local server (just to serve the app's
 own files — nothing leaves your machine) and opens the app in its own
