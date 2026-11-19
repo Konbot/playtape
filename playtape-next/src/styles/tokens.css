@@ -1,10 +1,23 @@
-/* PLAYTAPE design tokens. "Playful and bold": flat colour blocks, ink
-   outlines, a hard sticker shadow on things you can press. One accent (brand
-   blue). Tomato means recording and nothing else. */
+/* PLAYTAPE design tokens.
+
+   The look borrows from a 1990s cassette portastudio without imitating one:
+   a warm putty-grey chassis, black knobs with coloured pointers, olive rubber
+   keys, an LCD counter, and track names written on tape with a marker.
+
+   The colour rules, in order of importance:
+   1. The chassis is grey. Colour appears only where it means something.
+   2. Tomato means recording (or "too loud") and nothing else.
+   3. A track has one colour: its tape label, its clips, its strip cap.
+   4. A control's pointer colour says what kind of control it is (--fn-*).
+   5. A lit LED means something is on or running.
+   6. Brand blue marks the thing that is selected or the main action. */
 
 :root {
   --font-ui: 'Bricolage Grotesque Variable', ui-rounded, system-ui, sans-serif;
   --font-mono: 'Geist Mono Variable', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  /* Marker lettering for things a person would label by hand: track names and
+     cassette titles. Mansalva only supplies the Greek letters. */
+  --font-hand: 'Permanent Marker', 'Mansalva', 'Bricolage Grotesque Variable', system-ui, sans-serif;
 
   /* type scale: nothing below 12px */
   --t-12: 0.75rem;
@@ -32,13 +45,13 @@
   --r-full: 999px;
 
   --line-w: 2px;
-  --lift: 3px; /* sticker shadow offset = how far a key travels when pressed */
+  --lift: 3px; /* hard shadow offset = how far a key travels when pressed */
 
   /* Springy press, from a damped-spring curve. Silenced by Calm mode. */
   --spring: linear(0, 0.009, 0.035 2.1%, 0.141 4.4%, 0.723 12.9%, 0.938 16.7%, 1.017, 1.077, 1.121, 1.149 24.3%, 1.159, 1.163, 1.161, 1.154 29.9%, 1.129 32.8%, 1.051 39.6%, 1.017 43.1%, 0.991, 0.977 51%, 0.974 53.8%, 0.975 57.1%, 0.997 69.8%, 1.003 76.9%, 1);
   --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
 
-  /* brand + roles that do not change with the theme */
+  /* ---- brand and roles that do not change with the theme ---- */
   /* The brand blue is for the badge and the Library stage. Controls use a slightly
      deeper blue so white text on them passes 4.5:1 (the brand blue gives 3.8:1). */
   --brand: #3d7bff;
@@ -47,9 +60,9 @@
   --on-blue: #ffffff;
   --tomato: oklch(0.66 0.22 28);
   /* Ink, not white: white on tomato is only 3.4:1, ink is 5:1. */
-  --on-tomato: oklch(0.22 0.045 270);
-  /* Tomato as a text colour needs to be deeper on paper and lighter at night. */
-  --tomato-text: oklch(0.56 0.22 28);
+  --on-tomato: oklch(0.21 0.02 270);
+  /* Tomato as a text colour needs to be deeper on putty and lighter at night. */
+  --tomato-text: oklch(0.5 0.21 28);
 
   /* Track palette: matched lightness and chroma so no track shouts.
      Order keeps the hue of the old app's t1..t8 so imported songs look familiar. */
@@ -61,50 +74,80 @@
   --tc-5: oklch(0.8 0.14 350);  /* bubblegum */
   --tc-6: oklch(0.82 0.11 198); /* teal */
   --tc-7: oklch(0.86 0.16 128); /* lime */
-  --on-track: oklch(0.22 0.045 270);
+  --on-track: oklch(0.21 0.02 270);
 
-  /* Paper theme (default) */
-  --bg: oklch(0.968 0.02 85);
-  --bg-sunk: oklch(0.935 0.026 85);
-  --surface: oklch(0.995 0.006 85);
-  --text: oklch(0.22 0.045 270);
-  --text-2: oklch(0.44 0.04 270);
-  --line: oklch(0.22 0.045 270);
-  --shadow: oklch(0.22 0.045 270);
-  --grid: oklch(0.22 0.045 270 / 0.07);
-  --grid-bar: oklch(0.22 0.045 270 / 0.2);
+  /* Function colours: what kind of control a knob or fader is. They sit on the
+     black knob caps and fader slots, so they are the same in both themes. */
+  --fn-tone: oklch(0.82 0.15 65);   /* EQ, trim lows: orange */
+  --fn-level: oklch(0.78 0.15 350); /* how loud: level, tighten: pink */
+  --fn-fx: oklch(0.84 0.11 215);    /* space and effects: reverb, echo: cyan */
+  --fn-pos: oklch(0.96 0.01 85);    /* where and when: pan, timing: white */
+
+  /* Hardware parts, the same in both themes like the real thing. */
+  --knob: oklch(0.2 0.012 270);       /* knob plate and fader slot */
+  --knob-cap: oklch(0.3 0.012 270);
+  --knob-tick: oklch(0.52 0.01 270);
+  --olive: oklch(0.7 0.05 100);       /* rubber transport keys */
+  --olive-press: oklch(0.64 0.05 100);
+  --on-olive: oklch(0.21 0.02 270);
+  --lcd: oklch(0.8 0.05 125);         /* the counter's display */
+  --on-lcd: oklch(0.24 0.04 150);
+  --led-off: oklch(0.4 0.02 60);
+  --led-green: oklch(0.82 0.2 145);
+  --led-amber: oklch(0.85 0.16 82);
+  --tape: oklch(0.9 0.05 92);         /* plain masking tape */
+  --note: oklch(0.94 0.07 98);        /* a yellowed paper note */
+
+  /* ---- Putty theme (default): the chassis in daylight ---- */
+  --bg: oklch(0.885 0.011 85);
+  --bg-sunk: oklch(0.835 0.012 85);
+  --surface: oklch(0.955 0.01 88);
+  --text: oklch(0.21 0.02 270);
+  --text-2: oklch(0.38 0.02 270);
+  --line: oklch(0.21 0.02 270);
+  --shadow: oklch(0.21 0.02 270);
+  --grid: oklch(0.21 0.02 270 / 0.08);
+  --grid-bar: oklch(0.21 0.02 270 / 0.22);
+  /* an engraved groove between panels: a dark line with a light one under it */
+  --groove-d: oklch(0.21 0.02 270 / 0.3);
+  --groove-l: oklch(1 0 0 / 0.55);
   --rec-wash: oklch(0.66 0.22 28 / 0.1);
   color-scheme: light;
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme='paper']) {
-    --bg: oklch(0.24 0.04 270);
-    --bg-sunk: oklch(0.19 0.035 270);
-    --surface: oklch(0.33 0.045 270);
-    --text: oklch(0.96 0.015 85);
-    --text-2: oklch(0.78 0.03 270);
-    --line: oklch(0.06 0.02 270);
-    --shadow: oklch(0.06 0.02 270);
-    --grid: oklch(0.96 0.015 85 / 0.07);
-    --grid-bar: oklch(0.96 0.015 85 / 0.2);
+    --bg: oklch(0.31 0.008 80);
+    --bg-sunk: oklch(0.25 0.008 80);
+    --surface: oklch(0.39 0.01 80);
+    --text: oklch(0.955 0.012 85);
+    --text-2: oklch(0.8 0.015 85);
+    --line: oklch(0.1 0.008 80);
+    --shadow: oklch(0.1 0.008 80);
+    --grid: oklch(0.955 0.012 85 / 0.07);
+    --grid-bar: oklch(0.955 0.012 85 / 0.2);
+    --groove-d: oklch(0 0 0 / 0.5);
+    --groove-l: oklch(1 0 0 / 0.09);
     --rec-wash: oklch(0.66 0.22 28 / 0.16);
-    --tomato-text: oklch(0.72 0.19 28);
+    --tomato-text: oklch(0.74 0.18 28);
     color-scheme: dark;
   }
 }
 
+/* Night: the same chassis with the lights off. */
 :root[data-theme='night'] {
-  --bg: oklch(0.24 0.04 270);
-  --bg-sunk: oklch(0.19 0.035 270);
-  --surface: oklch(0.33 0.045 270);
-  --text: oklch(0.96 0.015 85);
-  --text-2: oklch(0.78 0.03 270);
-  --line: oklch(0.06 0.02 270);
-  --shadow: oklch(0.06 0.02 270);
-  --grid: oklch(0.96 0.015 85 / 0.07);
-  --grid-bar: oklch(0.96 0.015 85 / 0.2);
+  --bg: oklch(0.31 0.008 80);
+  --bg-sunk: oklch(0.25 0.008 80);
+  --surface: oklch(0.39 0.01 80);
+  --text: oklch(0.955 0.012 85);
+  --text-2: oklch(0.8 0.015 85);
+  --line: oklch(0.1 0.008 80);
+  --shadow: oklch(0.1 0.008 80);
+  --grid: oklch(0.955 0.012 85 / 0.07);
+  --grid-bar: oklch(0.955 0.012 85 / 0.2);
+  --groove-d: oklch(0 0 0 / 0.5);
+  --groove-l: oklch(1 0 0 / 0.09);
   --rec-wash: oklch(0.66 0.22 28 / 0.16);
-  --tomato-text: oklch(0.72 0.19 28);
+  --tomato-text: oklch(0.74 0.18 28);
   color-scheme: dark;
 }

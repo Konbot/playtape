@@ -20,9 +20,9 @@
   }
 </script>
 
-{#snippet k(t: Track, key: keyof TrackParams, label: string, min: number, max: number, def: number, unit: string)}
+{#snippet k(t: Track, key: keyof TrackParams, label: string, min: number, max: number, def: number, unit: string, fn: 'level' | 'fx')}
   <Knob
-    {label} {min} {max} {def} {unit} size={46}
+    {label} {min} {max} {def} {unit} {fn} size={46}
     value={t[key] as number}
     onstart={() => beginEdit(`${label} on ${t.name}`)}
     oninput={(v) => set(t, key, v)}
@@ -35,14 +35,14 @@
   <section class="panel" aria-label="Pedals for {t.name}">
     <div class="top">
       <b>Pedals</b>
-      <span class="for" style:--c="var(--tc-{t.color % 8})"><i></i>{t.name}</span>
+      <span class="for tape" style:--c="var(--tc-{t.color % 8})">{t.name}</span>
       <span class="hint">Applied on playback and export, never printed into the recording.</span>
       <Key icon="close" size="sm" tone="plain" label="Close pedals" onclick={() => (app.fxTrack = null)} />
     </div>
     <div class="board">
       <div class="pedal" class:on={t.driveOn} style:--c="var(--tc-0)">
         <header><b>Drive</b><Switch on={t.driveOn} label="Drive on {t.name}" onchange={(v) => change(t, 'driveOn', v, `Drive ${v ? 'on' : 'off'}`)} /></header>
-        <div class="kn">{@render k(t, 'drive', 'Gain', 0, 1, 0.4, '')}{@render k(t, 'driveLevel', 'Level', 0, 1.4, 0.8, '')}</div>
+        <div class="kn">{@render k(t, 'drive', 'Gain', 0, 1, 0.4, '', 'level')}{@render k(t, 'driveLevel', 'Level', 0, 1.4, 0.8, '', 'level')}</div>
         <Seg size="sm" label="Drive type" value={t.driveType} onchange={(v: DriveType) => change(t, 'driveType', v, 'Drive type')} options={[{ value: 'clean', label: 'Clean' }, { value: 'crunch', label: 'Crunch' }, { value: 'fuzz', label: 'Fuzz' }]} />
       </div>
 
@@ -54,13 +54,13 @@
 
       <div class="pedal" class:on={t.delayOn} style:--c="var(--tc-1)">
         <header><b>Echo</b><Switch on={t.delayOn} label="Echo on {t.name}" onchange={(v) => change(t, 'delayOn', v, `Echo ${v ? 'on' : 'off'}`)} /></header>
-        <div class="kn">{@render k(t, 'delayFb', 'Repeats', 0, 0.9, 0.3, '')}{@render k(t, 'delayMix', 'Mix', 0, 1, 0.25, '')}</div>
+        <div class="kn">{@render k(t, 'delayFb', 'Repeats', 0, 0.9, 0.3, '', 'fx')}{@render k(t, 'delayMix', 'Mix', 0, 1, 0.25, '', 'fx')}</div>
         <Seg size="sm" label="Echo time, in notes at the song tempo" value={t.delaySync} onchange={(v: DelaySync) => change(t, 'delaySync', v, 'Echo time')} options={[{ value: '1/4', label: '1/4' }, { value: '1/8.', label: '1/8.' }, { value: '1/8', label: '1/8' }, { value: '1/16', label: '1/16' }]} />
       </div>
 
       <div class="pedal" class:on={t.tremOn} style:--c="var(--tc-2)">
         <header><b>Tremolo</b><Switch on={t.tremOn} label="Tremolo on {t.name}" onchange={(v) => change(t, 'tremOn', v, `Tremolo ${v ? 'on' : 'off'}`)} /></header>
-        <div class="kn">{@render k(t, 'tremRate', 'Speed', 1, 12, 5, ' Hz')}{@render k(t, 'tremDepth', 'Depth', 0, 1, 0.5, '')}</div>
+        <div class="kn">{@render k(t, 'tremRate', 'Speed', 1, 12, 5, ' Hz', 'fx')}{@render k(t, 'tremDepth', 'Depth', 0, 1, 0.5, '', 'fx')}</div>
       </div>
     </div>
   </section>
@@ -81,19 +81,9 @@
     margin: 0 auto var(--s-2);
   }
   .for {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    font-size: var(--t-14);
-    font-weight: var(--w-bold);
     white-space: nowrap;
-  }
-  .for i {
-    width: 12px;
-    height: 12px;
-    border-radius: 4px;
-    background: var(--c);
-    border: var(--line-w) solid var(--line);
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
   .hint {
     flex: 1;
@@ -152,20 +142,22 @@
     align-items: center;
   }
   /* on a coloured pedal the controls stay neutral so they read */
+  .pedal :global(.seg) {
+    color: var(--text);
+  }
   .pedal :global(.switch.on) {
     background: var(--on-track);
-  }
-  .pedal :global(.knob) {
-    --c: var(--on-track);
   }
   @media (max-width: 699px) {
     .hint {
       display: none;
     }
     .for {
-      flex: 1;
+      flex: 0 1 auto;
       min-width: 0;
-      overflow: hidden;
+    }
+    .top {
+      justify-content: space-between;
     }
     .pedal {
       flex-basis: 176px;

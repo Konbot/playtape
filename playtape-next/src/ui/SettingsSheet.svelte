@@ -84,7 +84,7 @@
     <h3>Look</h3>
     <div class="row stack">
       <div class="txt"><b>Theme</b></div>
-      <Seg label="Theme" value={app.theme} onchange={(v: Theme) => setTheme(v)} options={[{ value: 'paper', label: 'Paper' }, { value: 'night', label: 'Night' }, { value: 'auto', label: 'Match device' }]} />
+      <Seg label="Theme" value={app.theme} onchange={(v: Theme) => setTheme(v)} options={[{ value: 'paper', label: 'Day' }, { value: 'night', label: 'Night' }, { value: 'auto', label: 'Match device' }]} />
     </div>
     <div class="row">
       <div class="txt"><b>Calm mode</b><span>No motion, no pulsing, no knob clicks.</span></div>

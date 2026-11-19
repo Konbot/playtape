@@ -1,6 +1,7 @@
 <!-- A fader on a native range input, so it is keyboard and screen-reader
-     operable for free. Horizontal by default, vertical for channel strips.
-     One undo step per drag. -->
+     operable for free: a dark slot, a ribbed cap with a coloured line across
+     it, and the slot filled up to the value. Horizontal by default, vertical
+     for channel strips. One undo step per drag. Set --c for the colour. -->
 <script lang="ts">
   let {
     value,
@@ -56,6 +57,10 @@
 <style>
   .fader {
     --dir: 90deg;
+    --fill: var(--c, var(--blue));
+    /* ribs across the cap, and the coloured line you aim with */
+    --cap: linear-gradient(var(--dir), transparent calc(50% - 2px), var(--line) calc(50% - 2px) calc(50% - 1.5px), var(--fill) calc(50% - 1.5px) calc(50% + 1.5px), var(--line) calc(50% + 1.5px) calc(50% + 2px), transparent calc(50% + 2px)),
+      repeating-linear-gradient(var(--dir), oklch(0 0 0 / 0.2) 0 1px, transparent 1px 4px), var(--surface);
     -webkit-appearance: none;
     appearance: none;
     width: 100%;
@@ -75,54 +80,52 @@
     touch-action: pan-x;
   }
   .fader::-webkit-slider-runnable-track {
-    height: 12px;
+    height: 10px;
     border: var(--line-w) solid var(--line);
-    border-radius: 99px;
-    background: linear-gradient(var(--dir), var(--c, var(--blue)) var(--p), var(--surface) var(--p));
+    border-radius: 4px;
+    background: linear-gradient(var(--dir), var(--fill) var(--p), var(--knob) var(--p));
   }
   .fader.vertical::-webkit-slider-runnable-track {
-    width: 12px;
+    width: 10px;
     height: auto;
   }
   .fader::-moz-range-track {
-    height: 8px;
+    height: 6px;
     border: var(--line-w) solid var(--line);
-    border-radius: 99px;
-    background: linear-gradient(var(--dir), var(--c, var(--blue)) var(--p), var(--surface) var(--p));
+    border-radius: 4px;
+    background: linear-gradient(var(--dir), var(--fill) var(--p), var(--knob) var(--p));
   }
   .fader.vertical::-moz-range-track {
-    width: 8px;
+    width: 6px;
     height: 100%;
   }
   .fader::-webkit-slider-thumb {
     -webkit-appearance: none;
-    width: 26px;
-    height: 26px;
-    margin-top: -9px;
-    border-radius: 50%;
-    background: var(--surface);
+    width: 20px;
+    height: 30px;
+    margin-top: -12px;
+    border-radius: 5px;
+    background: var(--cap);
     border: var(--line-w) solid var(--line);
     box-shadow: 2px 2px 0 var(--shadow);
   }
   .fader.vertical::-webkit-slider-thumb {
     margin-top: 0;
-    margin-right: -9px;
-    width: 30px;
+    margin-right: -13px;
+    width: 32px;
     height: 20px;
-    border-radius: 7px;
   }
   .fader::-moz-range-thumb {
-    width: 22px;
-    height: 22px;
-    border-radius: 50%;
-    background: var(--surface);
+    width: 16px;
+    height: 26px;
+    border-radius: 5px;
+    background: var(--cap);
     border: var(--line-w) solid var(--line);
     box-shadow: 2px 2px 0 var(--shadow);
   }
   .fader.vertical::-moz-range-thumb {
-    width: 26px;
+    width: 28px;
     height: 16px;
-    border-radius: 7px;
   }
   .fader:active::-webkit-slider-thumb {
     box-shadow: 0 0 0 var(--shadow);

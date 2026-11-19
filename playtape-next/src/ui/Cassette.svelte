@@ -92,11 +92,13 @@
     background: var(--c2);
     border-bottom: var(--line-w) solid var(--line);
   }
+  /* written on the label by hand */
   .title {
-    font-weight: var(--w-black);
+    font-family: var(--font-hand);
+    font-weight: 400;
     font-size: clamp(12px, 6.4cqw, 22px);
-    line-height: 1.1;
-    letter-spacing: -0.01em;
+    line-height: 1.15;
+    letter-spacing: 0.01em;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     line-clamp: 2;

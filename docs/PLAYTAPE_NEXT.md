@@ -41,7 +41,7 @@ npm run build:all
 That produces two things:
 
 - `playtape-next/dist-single/index.html`: the whole app in **one file**, about
-  630 KB. Open it in Chrome or Edge, copy it to a USB stick, or let the
+  700 KB. Open it in Chrome or Edge, copy it to a USB stick, or let the
   Windows installer pick it up.
 - `playtape-next/dist/`: the **installable web app**. Put this folder on any
   HTTPS host and a phone or computer can install it and use it offline.
@@ -175,7 +175,7 @@ The gear at the top of a song opens Settings:
   **Tuner**, which listens to the mic and shows the nearest note for a guitar,
   a bass or your voice.
 - **Sound**: the loudness ceiling.
-- **Look**: Paper or Night theme, and **Calm mode**, which turns off every
+- **Look**: Day or Night theme, and **Calm mode**, which turns off every
   animation. The system "reduce motion" setting is respected as well.
 - **App**: install as an app, when the browser allows it.
 

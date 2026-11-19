@@ -1,12 +1,14 @@
-<!-- The one knob of the app. Drag up and down; it clicks through 24 detents,
-     sticks lightly at its default, and double-click returns it there (the feel
-     of the old knobEl). A real slider to assistive tech: arrow keys work. -->
+<!-- The one knob of the app: a black cap with a coloured pointer, in a ring of
+     tick marks that light up to show the value. The pointer colour says what
+     kind of control it is (see --fn-* in tokens.css). Drag up and down; it
+     clicks through 24 detents, sticks lightly at its default, and double-click
+     returns it there. A real slider to assistive tech: arrow keys work. -->
 <script lang="ts">
   import { engine } from '../audio/engine';
   import { app } from '../state.svelte';
 
   let {
-    value, min, max, def, label, unit = '', size = 44,
+    value, min, max, def, label, unit = '', size = 44, fn = 'plain',
     onstart, oninput, onend,
   }: {
     value: number;
@@ -17,6 +19,8 @@
     /** How the value reads, e.g. " dB". Use `format` semantics via aria only. */
     unit?: string;
     size?: number;
+    /** What kind of control this is; picks the pointer colour. */
+    fn?: 'tone' | 'level' | 'fx' | 'pos' | 'plain';
     onstart?: () => void;
     oninput: (v: number) => void;
     onend?: () => void;
@@ -24,6 +28,10 @@
 
   const DETENTS = 24;
   const frac = $derived((value - min) / (max - min));
+  /* A knob that goes both ways (EQ, pan) lights its ticks from the middle. */
+  const fracDef = $derived(min < 0 && max > 0 ? (def - min) / (max - min) : 0);
+  const lit0 = $derived(Math.min(frac, fracDef) * 270);
+  const lit1 = $derived(Math.max(frac, fracDef) * 270);
   const text = $derived(`${Math.abs(max - min) > 4 ? value.toFixed(1) : Math.round(value * 100) + (unit ? '' : '%')}${unit}`);
 
   let dragging = false;
@@ -77,7 +85,7 @@
 
 <div class="knobwrap">
   <div
-    class="knob"
+    class="knob {fn}"
     role="slider"
     tabindex="0"
     aria-label={label}
@@ -87,7 +95,8 @@
     aria-valuetext={text}
     title="{label}: {text} (double-click to reset)"
     style:--size="{size}px"
-    style:--fill="{frac * 270}deg"
+    style:--lit0="{lit0}deg"
+    style:--lit1="{lit1}deg"
     style:--ang="{-135 + frac * 270}deg"
     onpointerdown={down}
     onpointermove={move}
@@ -110,42 +119,63 @@
     min-width: 0;
   }
   .knob {
+    --c: var(--fn-pos);
     position: relative;
     width: var(--size);
     height: var(--size);
     border-radius: 50%;
-    /* value arc: starts bottom-left, sweeps 270° */
-    background: conic-gradient(from -135deg, var(--c, var(--blue)) 0 var(--fill), color-mix(in oklch, var(--text) 16%, transparent) var(--fill) 270deg, transparent 270deg);
+    background: var(--knob);
+    border: var(--line-w) solid var(--line);
+    box-shadow: 2px 2px 0 var(--shadow);
     cursor: ns-resize;
     touch-action: none;
     flex: none;
   }
+  .knob.tone { --c: var(--fn-tone); }
+  .knob.level { --c: var(--fn-level); }
+  .knob.fx { --c: var(--fn-fx); }
+  .knob.pos { --c: var(--fn-pos); }
+  /* the tick ring: 13 marks over 270 degrees, lit in the pointer colour up to the value */
+  .knob::before {
+    content: '';
+    position: absolute;
+    inset: 1px;
+    border-radius: 50%;
+    background: conic-gradient(from -135deg, var(--knob-tick) 0 var(--lit0), var(--c) var(--lit0) var(--lit1), var(--knob-tick) var(--lit1) 270deg, transparent 270deg);
+    -webkit-mask: repeating-conic-gradient(from -137deg, #000 0 4deg, transparent 4deg 22.5deg), radial-gradient(closest-side, transparent 72%, #000 73%);
+    mask: repeating-conic-gradient(from -137deg, #000 0 4deg, transparent 4deg 22.5deg), radial-gradient(closest-side, transparent 72%, #000 73%);
+    -webkit-mask-composite: source-in;
+    mask-composite: intersect;
+  }
   .cap {
     position: absolute;
-    inset: 5px;
+    inset: 17%;
     border-radius: 50%;
-    background: var(--surface);
-    border: var(--line-w) solid var(--line);
-    box-shadow: 2px 2px 0 var(--shadow);
+    background: var(--knob-cap);
+    border: 1.5px solid oklch(0 0 0 / 0.55);
     transform: rotate(var(--ang));
   }
+  /* the pointer */
   .cap::after {
     content: '';
     position: absolute;
-    top: 2px;
+    top: -1px;
     left: 50%;
-    width: 3px;
-    height: 34%;
-    margin-left: -1.5px;
+    width: 4px;
+    height: 56%;
+    margin-left: -2px;
     border-radius: 2px;
-    background: var(--text);
+    background: var(--c);
   }
-  .knob:active .cap {
+  .knob:active {
     box-shadow: 0 0 0 var(--shadow);
+    transform: translate(2px, 2px);
   }
   .lbl {
     font-size: var(--t-12);
     font-weight: var(--w-bold);
+    letter-spacing: 0.01em;
+    text-transform: uppercase;
     color: var(--text-2);
     white-space: nowrap;
   }

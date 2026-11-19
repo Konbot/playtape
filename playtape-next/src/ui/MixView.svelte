@@ -9,7 +9,6 @@
   import { onFrame } from '../lib/raf';
   import type { ReverbType, Track, TrackParams } from '../model/types';
   import Fader from './Fader.svelte';
-  import Icon from './Icon.svelte';
   import Key from './Key.svelte';
   import Knob from './Knob.svelte';
   import Overview from './Overview.svelte';
@@ -57,9 +56,9 @@
 
 <svelte:window bind:innerWidth={winW} />
 
-{#snippet k(t: Track, key: keyof TrackParams, label: string, min: number, max: number, def: number, unit: string, size: number)}
+{#snippet k(t: Track, key: keyof TrackParams, label: string, min: number, max: number, def: number, unit: string, size: number, fn: 'tone' | 'level' | 'fx' | 'pos')}
   <Knob
-    {label} {min} {max} {def} {unit} {size}
+    {label} {min} {max} {def} {unit} {size} {fn}
     value={t[key] as number}
     onstart={() => beginEdit(`${label} on ${t.name}`)}
     oninput={(v) => set(t, key, v)}
@@ -68,13 +67,16 @@
 {/snippet}
 
 {#snippet knobs(t: Track, size: number)}
+  <!-- pointer colours: orange shapes the tone, pink is loudness, cyan is space, white is position -->
   <div class="knobs">
-    {@render k(t, 'eqHi', 'High', -12, 12, 0, ' dB', size)}
-    {@render k(t, 'eqMid', 'Mid', -12, 12, 0, ' dB', size)}
-    {@render k(t, 'eqLo', 'Low', -12, 12, 0, ' dB', size)}
-    {@render k(t, 'squeeze', 'Tighten', 0, 1, 0, '', size)}
-    {@render k(t, 'verb', 'Reverb', 0, 1, 0, '', size)}
-    {@render k(t, 'pan', 'Pan', -1, 1, 0, '', size)}
+    {@render k(t, 'eqHi', 'High', -12, 12, 0, ' dB', size, 'tone')}
+    {@render k(t, 'eqMid', 'Mid', -12, 12, 0, ' dB', size, 'tone')}
+    {@render k(t, 'eqLo', 'Low', -12, 12, 0, ' dB', size, 'tone')}
+  </div>
+  <div class="knobs">
+    {@render k(t, 'squeeze', 'Tighten', 0, 1, 0, '', size, 'level')}
+    {@render k(t, 'verb', 'Reverb', 0, 1, 0, '', size, 'fx')}
+    {@render k(t, 'pan', 'Pan', -1, 1, 0, '', size, 'pos')}
   </div>
 {/snippet}
 
@@ -83,7 +85,7 @@
     Trim lows <b class="mono">{t.lowcut ? `${t.lowcut} Hz` : 'Off'}</b>
   </button>
   <button class="chip" class:on={app.fxTrack === t.id} aria-pressed={app.fxTrack === t.id} onclick={() => togglePedals(t)}>
-    Pedals {#if fxOn(t)}<span class="dot" title="A pedal is on"></span>{/if}
+    Pedals <span class="led" class:lit={fxOn(t)} style:--led="var(--led-amber)" title={fxOn(t) ? 'A pedal is on' : 'All pedals are off'}></span>
   </button>
 {/snippet}
 
@@ -98,7 +100,7 @@
         <section class="card" style:--c="var(--tc-{t.color % 8})" class:muted={t.mute}>
           <div class="who">
             <span class="num mono">{i + 1}</span>
-            <span class="name">{t.name}</span>
+            <span class="namebox"><span class="tape name" style:--tilt="{i % 2 ? 0.8 : -1}deg">{t.name}</span></span>
             <span class="val mono">{db(t.vol)} dB</span>
             <Key size="sm" tone="plain" icon={open === t.id ? 'minus' : 'faders'} label={open === t.id ? `Hide controls for ${t.name}` : `Show controls for ${t.name}`} onclick={() => (open = open === t.id ? null : t.id)} />
           </div>
@@ -136,7 +138,7 @@
           </div>
         </div>
         <div class="room"><span>Reverb room</span><Seg size="sm" label="Reverb room" options={ROOMS} value={song.reverbType} onchange={setReverb} /></div>
-        <p class="note">The limiter is always on: nothing leaves louder than the ceiling.</p>
+        <p class="note"><span class="led lit"></span>The limiter is always on: nothing leaves louder than the ceiling.</p>
       </section>
     </div>
   {:else}
@@ -145,15 +147,15 @@
         <section class="strip" style:--c="var(--tc-{t.color % 8})" class:muted={t.mute}>
           <div class="who">
             <span class="num mono">{i + 1}</span>
-            <span class="name" title={t.name}>{t.name}</span>
+            <span class="namebox"><span class="tape name" title={t.name} style:--tilt="{i % 2 ? 0.8 : -1}deg">{t.name}</span></span>
           </div>
           <div class="ms">
             <Key size="sm" label="Mute {t.name}" pressed={t.mute} onclick={() => toggle(t, 'mute')}>M</Key>
             <Key size="sm" label="Solo {t.name}" pressed={t.solo} onclick={() => toggle(t, 'solo')}>S</Key>
           </div>
-          {@render knobs(t, 40)}
+          {@render knobs(t, 44)}
           <div class="chips">{@render extras(t)}</div>
-          <div class="fz">
+          <div class="fz" style:--unity="{(1 / 1.4) * 100}%">
             <div class="vmeter" use:meter={t.id}><i></i></div>
             <Fader vertical label="{t.name} level" value={t.vol} max={1.4} reset={1} onstart={() => beginEdit(`Level of ${t.name}`)} oninput={(v) => set(t, 'vol', v)} onend={() => endEdit(false)} />
           </div>
@@ -167,8 +169,8 @@
           <span class="name">Master</span>
         </div>
         <div class="room"><span>Reverb room</span><Seg size="sm" label="Reverb room" options={ROOMS} value={song.reverbType} onchange={setReverb} /></div>
-        <p class="note"><Icon name="check" size={14} /> Limiter always on</p>
-        <div class="fz">
+        <p class="note silk"><span class="led lit"></span>Limiter always on</p>
+        <div class="fz" style:--unity="{(0.9 / 1.3) * 100}%">
           <div class="vmeter" use:meter={'master'}><i></i></div>
           <Fader vertical label="Master level" value={song.masterVol} max={1.3} reset={0.9} onstart={() => beginEdit('Master level')} oninput={(v) => { song.masterVol = v; liveEdit(); }} onend={() => endEdit(false)} />
         </div>
@@ -206,46 +208,55 @@
     gap: var(--s-2);
     min-width: 0;
   }
+  /* the channel number, printed on the panel */
   .num {
     flex: none;
-    display: grid;
-    place-items: center;
-    min-width: 22px;
-    height: 22px;
-    padding: 0 4px;
-    font-size: var(--t-12);
+    min-width: 1ch;
+    font-size: var(--t-20);
     font-weight: 700;
-    color: var(--on-track);
-    background: var(--c, var(--surface));
-    border: var(--line-w) solid var(--line);
-    border-radius: 7px;
-  }
-  .master .num {
+    line-height: 1;
     color: var(--text);
   }
-  .name {
+  /* the track's name on a strip of tape in the track's colour */
+  .namebox {
     flex: 1;
     min-width: 0;
-    font-weight: var(--w-bold);
-    font-size: var(--t-14);
+    display: flex;
+  }
+  .name {
+    min-width: 0;
+    max-width: 100%;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+  .master .name {
+    flex: 1;
+    font-weight: var(--w-black);
+    font-size: var(--t-14);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
   }
   .val {
     font-size: var(--t-12);
     color: var(--text-2);
     white-space: nowrap;
   }
-  .muted .name,
-  .muted .val {
-    opacity: 0.5;
+  /* a muted track's tape loses its colour: grey means silent */
+  .muted .name {
+    filter: grayscale(1);
   }
   .knobs {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: var(--s-2) 2px;
     justify-items: center;
+  }
+  /* an engraved groove between the tone knobs and the rest */
+  .knobs + .knobs {
+    padding-top: var(--s-3);
+    border-top: 1px solid var(--groove-d);
+    box-shadow: inset 0 1px 0 var(--groove-l);
   }
   .chips {
     display: flex;
@@ -276,12 +287,14 @@
   .chip b {
     font-weight: 700;
   }
-  .dot {
-    width: 9px;
-    height: 9px;
-    border-radius: 50%;
-    background: var(--c, var(--blue));
-    border: 1.5px solid currentColor;
+  /* Mute goes dark, Solo gets the spotlight. */
+  .mix :global(.key[aria-label^='Mute'].on) {
+    --fill: var(--text);
+    --ink: var(--bg);
+  }
+  .mix :global(.key[aria-label^='Solo'].on) {
+    --fill: var(--tc-4);
+    --ink: var(--on-track);
   }
   .room :global(.seg button) {
     padding: 0 4px;
@@ -297,43 +310,67 @@
   .note {
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: 7px;
     font-size: var(--t-12);
     color: var(--text-2);
   }
+  .note .led {
+    align-self: flex-start;
+    margin-top: 3px;
+  }
+  .note.silk .led {
+    align-self: center;
+    margin-top: 0;
+  }
 
   /* ---- desktop strips ---- */
+  /* The channel strips sit side by side as one console panel. */
   .strips {
     flex: 1;
     min-height: 0;
     display: flex;
-    gap: var(--s-3);
+    gap: 0;
     overflow: auto;
     padding: 0 4px 6px 0;
   }
   .strip {
     flex: none;
-    width: 178px;
-    min-height: 440px;
+    width: 190px;
+    min-height: 452px;
     display: flex;
     flex-direction: column;
     gap: var(--s-3);
     padding: var(--s-3);
     background: var(--surface);
     border: var(--line-w) solid var(--line);
-    border-top: 10px solid var(--c, var(--text));
-    border-radius: var(--r-md);
+    border-top: 8px solid var(--c, var(--text));
     box-shadow: var(--lift) var(--lift) 0 var(--shadow);
     /* an ink line under the coloured cap */
     background-image: linear-gradient(var(--line), var(--line));
     background-size: 100% 2px;
     background-repeat: no-repeat;
   }
+  .strip + .strip {
+    margin-left: calc(-1 * var(--line-w));
+  }
+  .strip:first-child {
+    border-radius: var(--r-md) 0 0 var(--r-md);
+  }
+  .strip:nth-last-child(2) {
+    border-radius: 0 var(--r-md) var(--r-md) 0;
+  }
+  .strip:first-child:nth-last-child(2) {
+    border-radius: var(--r-md);
+  }
   .strip.master {
     width: 216px;
     margin-left: auto;
     position: sticky;
     right: 0;
+    border-radius: var(--r-md);
+  }
+  .strip .who {
+    min-height: 30px;
   }
   .ms {
     display: flex;
@@ -342,6 +379,14 @@
   .ms :global(.key) {
     flex: 1;
   }
+  /* level is pink wherever it appears */
+  .fz,
+  .fade {
+    --c: var(--fn-level);
+  }
+  .shift {
+    --c: var(--fn-pos);
+  }
   .fz {
     flex: 1;
     min-height: 120px;
@@ -349,22 +394,35 @@
     justify-content: center;
     gap: var(--s-2);
   }
+  /* the scale printed beside the fader, with a longer mark at 0 dB */
+  .fz::after {
+    content: '';
+    width: 9px;
+    margin-block: 10px;
+    border-top: 1px solid var(--text-2);
+    background:
+      linear-gradient(to top, transparent calc(var(--unity) - 1px), var(--text) calc(var(--unity) - 1px) calc(var(--unity) + 1px), transparent calc(var(--unity) + 1px)),
+      repeating-linear-gradient(to top, var(--text-2) 0 1px, transparent 1px 10%) left / 5px 100% no-repeat;
+  }
   .strip > .val {
     text-align: center;
   }
+  /* LED meters: green is fine, amber is hot, tomato is too loud */
   .vmeter {
     position: relative;
-    width: 8px;
-    border-radius: 4px;
-    background: color-mix(in oklch, var(--text) 12%, transparent);
+    width: 9px;
+    margin-block: 10px;
+    border-radius: 2px;
+    background: var(--knob);
     overflow: hidden;
   }
   .vmeter i {
     position: absolute;
     inset: 0;
-    background: var(--text);
-    transform-origin: bottom;
-    transform: scaleY(var(--lvl, 0));
+    background: linear-gradient(to top, var(--led-green) 0 70%, var(--led-amber) 70% 90%, var(--tomato) 90%);
+    -webkit-mask: repeating-linear-gradient(to top, #000 0 4px, transparent 4px 6px);
+    mask: repeating-linear-gradient(to top, #000 0 4px, transparent 4px 6px);
+    clip-path: inset(calc((1 - var(--lvl, 0)) * 100%) 0 0 0);
   }
 
   /* ---- phone rows ---- */
@@ -381,7 +439,7 @@
     padding: var(--s-2) var(--s-3) var(--s-3);
     background: var(--surface);
     border: var(--line-w) solid var(--line);
-    border-left: 10px solid var(--c, var(--text));
+    border-left: 8px solid var(--c, var(--text));
     border-radius: var(--r-md);
     box-shadow: var(--lift) var(--lift) 0 var(--shadow);
   }
@@ -400,18 +458,19 @@
     position: absolute;
     left: var(--s-2);
     right: 0;
-    bottom: 2px;
-    height: 4px;
+    bottom: 1px;
+    height: 5px;
     border-radius: 2px;
-    background: color-mix(in oklch, var(--text) 10%, transparent);
+    background: var(--knob);
     overflow: hidden;
   }
   .hmeter i {
     position: absolute;
     inset: 0;
-    background: var(--text);
-    transform-origin: left;
-    transform: scaleX(var(--lvl, 0));
+    background: linear-gradient(to right, var(--led-green) 0 70%, var(--led-amber) 70% 90%, var(--tomato) 90%);
+    -webkit-mask: repeating-linear-gradient(to right, #000 0 4px, transparent 4px 6px);
+    mask: repeating-linear-gradient(to right, #000 0 4px, transparent 4px 6px);
+    clip-path: inset(0 calc((1 - var(--lvl, 0)) * 100%) 0 0);
   }
   .more {
     display: flex;

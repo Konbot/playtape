@@ -111,7 +111,7 @@
       if (app.recording && pos > minLen - 10) minLen = pos + 60;
       for (const [id, el] of meterEls) {
         const lvl = transport.playing ? meterLevel(engine.chains.get(id)?.analyser) : 0;
-        el.style.transform = `scaleY(${lvl.toFixed(3)})`;
+        el.style.setProperty('--lvl', lvl.toFixed(3));
       }
     }),
   );
@@ -273,7 +273,8 @@
           <div class="who">
             <span class="num mono">{i + 1}</span>
             <input
-              class="tname"
+              class="tname tape"
+              style:--tilt="{i % 2 ? 0.8 : -1}deg"
               value={t.name}
               aria-label="Track {i + 1} name"
               onchange={(e) => renameTrack(t, e.currentTarget.value)}
@@ -329,7 +330,7 @@
 
     {#if !song.tracks.length && !app.recording}
       <div class="empty" style:width="{viewW}px">
-        <p><b>Empty tape.</b><br />Press the red key, then sing, strum or clap.</p>
+        <p class="notepaper"><b>Empty tape.</b><br />Press the red key, then sing, strum or clap.</p>
       </div>
     {/if}
 
@@ -445,10 +446,12 @@
     pointer-events: none;
     will-change: transform;
   }
+  /* rows are separated by an engraved groove, like channels on a panel */
   .row {
     display: flex;
     height: var(--lane-h);
-    border-bottom: 1px solid var(--grid-bar);
+    border-bottom: 1px solid var(--groove-d);
+    box-shadow: 0 1px 0 var(--groove-l);
   }
   .head {
     position: sticky;
@@ -496,50 +499,43 @@
     gap: 6px;
     min-width: 0;
   }
+  /* the channel number, printed on the panel */
   .num {
     flex: none;
+    min-width: 1ch;
+    font-size: var(--t-16);
+    font-weight: 700;
+    line-height: 1;
+    color: var(--text);
+  }
+  .num.rec-dot {
     display: grid;
     place-items: center;
-    min-width: 22px;
+    width: 22px;
     height: 22px;
-    padding: 0 4px;
-    font-size: var(--t-12);
-    font-weight: 700;
-    color: var(--on-track);
-    background: var(--c);
+    background: var(--tomato);
+    color: var(--on-tomato);
     border: var(--line-w) solid var(--line);
     border-radius: 7px;
   }
-  .num.rec-dot {
-    background: var(--tomato);
-    color: var(--on-tomato);
-  }
+  /* the name: marker on a strip of tape in the track's colour (.tape in base.css) */
   .tname {
     flex: 1;
     min-width: 0;
     width: 100%;
-    padding: 2px 4px;
-    margin: 0 -4px;
-    border: 0;
-    border-radius: 6px;
-    background: transparent;
-    font-weight: var(--w-bold);
-    font-size: var(--t-14);
     text-overflow: ellipsis;
+    cursor: text;
   }
-  .tname:hover {
-    background: color-mix(in oklch, var(--text) 8%, transparent);
-  }
-  .tname:focus {
-    background: var(--surface);
-    outline: 2px solid var(--blue);
+  @media (hover: hover) {
+    .row:not(.muted) .tname:hover:not(:focus) {
+      filter: brightness(1.06);
+    }
   }
   .tname.as-text {
+    font-weight: var(--w-bold);
+    font-size: var(--t-14);
     white-space: nowrap;
     overflow: hidden;
-  }
-  .tname.as-text:hover {
-    background: none;
   }
   .btns {
     display: flex;
@@ -557,22 +553,24 @@
   .row.target .head {
     background: color-mix(in oklch, var(--bg), var(--tomato) 14%);
   }
+  /* LED meter: green is fine, amber is hot, tomato is too loud */
   .meter {
     position: absolute;
     right: 3px;
     top: 8px;
     bottom: 8px;
-    width: 4px;
+    width: 5px;
     border-radius: 2px;
-    background: color-mix(in oklch, var(--text) 12%, transparent);
+    background: var(--knob);
     overflow: hidden;
   }
   .meter i {
     position: absolute;
     inset: 0;
-    background: var(--text);
-    transform-origin: bottom;
-    transform: scaleY(0);
+    background: linear-gradient(to top, var(--led-green) 0 70%, var(--led-amber) 70% 90%, var(--tomato) 90%);
+    -webkit-mask: repeating-linear-gradient(to top, #000 0 4px, transparent 4px 6px);
+    mask: repeating-linear-gradient(to top, #000 0 4px, transparent 4px 6px);
+    clip-path: inset(calc((1 - var(--lvl, 0)) * 100%) 0 0 0);
   }
   .lane {
     position: relative;
@@ -586,6 +584,10 @@
   .lane:has(:global(.clip.dragging)) {
     z-index: 3;
   }
+  /* a muted track's tape loses its colour: grey means silent */
+  .row.muted .tname:not(:focus) {
+    filter: grayscale(1);
+  }
   .row.muted .lane :global(.clip) {
     opacity: 0.4;
   }
@@ -598,10 +600,40 @@
     text-align: center;
     color: var(--text-2);
   }
+  /* the hint is a paper note held on with two bits of tape */
+  .notepaper {
+    position: relative;
+    padding: var(--s-4) var(--s-5) var(--s-4);
+    font-family: var(--font-hand);
+    font-size: var(--t-16);
+    line-height: 1.5;
+    color: var(--on-track);
+    background: var(--note);
+    box-shadow: 2px 3px 0 oklch(0 0 0 / 0.18);
+    transform: rotate(-1.5deg);
+  }
+  .notepaper::before,
+  .notepaper::after {
+    content: '';
+    position: absolute;
+    top: -9px;
+    width: 46px;
+    height: 18px;
+    background: color-mix(in oklab, var(--tape) 82%, transparent);
+    clip-path: polygon(0 14%, 2px 0, calc(100% - 3px) 0, 100% 20%, calc(100% - 2px) 60%, 100% 100%, 3px 100%, 0 70%, 2px 40%);
+  }
+  .notepaper::before {
+    left: 14px;
+    transform: rotate(-7deg);
+  }
+  .notepaper::after {
+    right: 14px;
+    transform: rotate(5deg);
+  }
   .empty b {
     font-size: var(--t-20);
-    font-weight: var(--w-black);
-    color: var(--text);
+    font-weight: 400;
+    color: var(--on-track);
   }
   .playhead {
     position: absolute;

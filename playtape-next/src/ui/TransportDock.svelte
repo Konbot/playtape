@@ -1,5 +1,7 @@
-<!-- Transport, anchored at the bottom where thumbs are. A status row (time,
-     tempo, loop, what Record records) and a row of keys with Record the largest. -->
+<!-- Transport, anchored at the bottom where thumbs are. A status row (the
+     counter, tempo, loop, what Record records) and the keys: three tape keys
+     in a well with Record the widest, then the round function keys. Every key
+     has its name printed above it, and Play and Record have a light. -->
 <script lang="ts">
   import {
     app, catchThat, fmtTime, loopValid, redo, rewind, setBpm, setClick, setSource, toggleLoop, toggleRecord, togglePlay, undo,
@@ -129,16 +131,43 @@
   </div>
 
   <div class="keys">
-    <Key icon="skipBack" label="Back to start (Home)" round onclick={rewind} disabled={app.recording} />
-    <Key icon={app.playing && !app.recording ? 'pause' : 'play'} label={app.playing ? 'Stop (Space)' : 'Play (Space)'} size="lg" round onclick={() => void togglePlay()} disabled={app.recording} />
-    <button class="rec-key" class:on={app.recording} class:add={app.source === 'drums' && !app.recording} aria-label={recLabel} title={recLabel} aria-pressed={app.recording} onclick={toggleRecord}>
-      {#if app.source === 'drums' && !app.recording}<Icon name="plus" size={30} />{:else}<span class="glyph"></span>{/if}
-    </button>
-    <Key icon="undo" label="Undo (Ctrl+Z)" round onclick={undo} disabled={!app.canUndo || app.recording} />
-    <span class="desk"><Key icon="redo" label="Redo (Ctrl+Shift+Z)" round onclick={redo} disabled={!app.canRedo || app.recording} /></span>
-    <Key icon="metronome" label={app.click ? 'Click on: count-in before recording (C)' : 'Click off (C)'} round pressed={app.click} onclick={() => setClick(!app.click)} />
+    <div class="deck" role="group" aria-label="Tape keys">
+      <div class="kcol">
+        <span class="silk cap" aria-hidden="true">Start</span>
+        <button class="tkey" aria-label="Back to start (Home)" title="Back to start (Home)" onclick={rewind} disabled={app.recording}>
+          <Icon name="skipBack" size={24} />
+        </button>
+      </div>
+      <div class="kcol">
+        <span class="silk cap" aria-hidden="true"><i class="led" class:lit={app.playing && !app.recording}></i>Play</span>
+        <button class="tkey play" aria-label={app.playing ? 'Stop (Space)' : 'Play (Space)'} title={app.playing ? 'Stop (Space)' : 'Play (Space)'} onclick={() => void togglePlay()} disabled={app.recording}>
+          <Icon name={app.playing && !app.recording ? 'pause' : 'play'} size={28} />
+        </button>
+      </div>
+      <div class="kcol">
+        <span class="silk cap" aria-hidden="true"><i class="led" class:lit={app.recording} style:--led="var(--tomato)"></i>{app.source === 'drums' && !app.recording ? 'Add' : 'Record'}</span>
+        <button class="tkey rec-key" class:on={app.recording} class:add={app.source === 'drums' && !app.recording} aria-label={recLabel} title={recLabel} aria-pressed={app.recording} onclick={toggleRecord}>
+          {#if app.source === 'drums' && !app.recording}<Icon name="plus" size={30} />{:else}<span class="glyph"></span>{/if}
+        </button>
+      </div>
+    </div>
+    <div class="kcol">
+      <span class="silk cap" aria-hidden="true">Undo</span>
+      <Key icon="undo" label="Undo (Ctrl+Z)" round onclick={undo} disabled={!app.canUndo || app.recording} />
+    </div>
+    <div class="kcol desk">
+      <span class="silk cap" aria-hidden="true">Redo</span>
+      <Key icon="redo" label="Redo (Ctrl+Shift+Z)" round onclick={redo} disabled={!app.canRedo || app.recording} />
+    </div>
+    <div class="kcol">
+      <span class="silk cap" aria-hidden="true"><i class="led" class:lit={app.click} style:--led="var(--led-amber)"></i>Click</span>
+      <Key icon="metronome" label={app.click ? 'Click on: count-in before recording (C)' : 'Click off (C)'} round pressed={app.click} onclick={() => setClick(!app.click)} />
+    </div>
     {#if app.catchOn}
-      <Key icon="catchBack" label="Catch that! Keep the last 30 seconds you played" round onclick={() => void catchThat()} disabled={app.recording || app.mic === 'off'} />
+      <div class="kcol">
+        <span class="silk cap" aria-hidden="true">Catch</span>
+        <Key icon="catchBack" label="Catch that! Keep the last 30 seconds you played" round onclick={() => void catchThat()} disabled={app.recording || app.mic === 'off'} />
+      </div>
     {/if}
   </div>
 </footer>
@@ -156,6 +185,7 @@
     padding: var(--s-3) var(--s-4) calc(var(--s-3) + env(safe-area-inset-bottom));
     background: var(--bg);
     border-top: var(--line-w) solid var(--line);
+    box-shadow: inset 0 1px 0 var(--groove-l);
   }
   .dock.rec {
     background: color-mix(in oklch, var(--bg), var(--tomato) 16%);
@@ -166,14 +196,17 @@
     gap: var(--s-2);
     min-width: 0;
   }
+  /* the counter: a grey-green LCD set into the panel */
   .clock {
     display: flex;
     align-items: baseline;
     gap: 8px;
-    padding: 6px 12px;
-    background: var(--text);
-    color: var(--bg);
-    border-radius: var(--r-sm);
+    padding: 5px 12px 4px;
+    background: var(--lcd);
+    color: var(--on-lcd);
+    border: var(--line-w) solid var(--line);
+    border-radius: 8px;
+    box-shadow: inset 0 3px 0 oklch(0 0 0 / 0.14);
   }
   .time {
     font-size: var(--t-20);
@@ -186,7 +219,8 @@
   }
   .bar {
     font-size: var(--t-12);
-    opacity: 0.7;
+    font-weight: 700;
+    opacity: 0.75;
     min-width: 3ch;
   }
   .chip {
@@ -301,63 +335,126 @@
   }
   .keys {
     display: flex;
-    align-items: center;
+    align-items: flex-end;
     gap: var(--s-3);
   }
-  .rec-key {
+  /* a key with its name printed above it */
+  .kcol {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+  }
+  /* centred on its key and never wider than it as far as layout goes */
+  .cap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    width: 0;
+    line-height: 1;
+    white-space: nowrap;
+  }
+  .cap .led {
+    width: 8px;
+    height: 8px;
+  }
+  /* the round function keys are olive rubber, like the tape keys */
+  .keys :global(.key:not(.on)) {
+    --fill: var(--olive);
+    --ink: var(--on-olive);
+  }
+  /* The three tape keys sit together in a dark well. */
+  .deck {
+    display: flex;
+    align-items: flex-end;
+    gap: 6px;
+    padding: 7px 8px 8px;
+    margin-right: var(--s-1);
+    background: var(--knob);
+    border: var(--line-w) solid var(--line);
+    border-radius: 14px;
+  }
+  .deck .cap {
+    color: oklch(0.9 0.01 85);
+  }
+  .tkey {
     position: relative;
     display: grid;
     place-items: center;
-    width: 76px;
-    height: 76px;
+    width: 58px;
+    height: 52px;
     flex: none;
-    margin: 0 var(--s-1);
-    border-radius: 50%;
-    border: 3px solid var(--line);
+    border: var(--line-w) solid var(--line);
+    border-radius: 9px;
+    background: var(--olive);
+    color: var(--on-olive);
+    /* the front face of the key */
+    box-shadow: inset 0 -6px 0 oklch(0 0 0 / 0.22);
+    transition: transform 0.2s var(--spring), box-shadow 0.2s var(--spring), background-color 0.15s;
+  }
+  .tkey.play {
+    width: 70px;
+  }
+  .tkey :global(svg) {
+    transform: translateY(-3px);
+  }
+  @media (hover: hover) {
+    .tkey:hover:not(:disabled) {
+      background: color-mix(in oklab, var(--olive), white 14%);
+    }
+  }
+  .tkey:active:not(:disabled) {
+    transform: translateY(3px);
+    box-shadow: inset 0 -2px 0 oklch(0 0 0 / 0.22);
+    transition-duration: 0.04s;
+  }
+  .tkey:disabled {
+    opacity: 0.45;
+    cursor: default;
+  }
+  .tkey.rec-key {
+    width: 92px;
     background: var(--tomato);
     color: var(--on-tomato);
-    box-shadow: 4px 4px 0 var(--shadow);
-    transition: transform 0.28s var(--spring), box-shadow 0.28s var(--spring), background-color 0.15s;
   }
   /* Adding drums is not recording, so the key is not tomato. */
   .rec-key.add {
     background: var(--blue);
     color: var(--on-blue);
   }
+  .tkey.rec-key :global(svg) {
+    transform: translateY(-3px);
+  }
   .glyph {
-    width: 30px;
-    height: 30px;
+    width: 26px;
+    height: 26px;
+    margin-top: -6px;
     border-radius: 50%;
     background: oklch(0.99 0.008 85);
     border: 3px solid var(--line);
     transition: border-radius 0.2s var(--ease-out), transform 0.2s var(--ease-out);
   }
   .rec-key.on .glyph {
-    border-radius: 7px;
+    border-radius: 6px;
     transform: scale(0.86);
   }
   .rec-key.on::after {
     content: '';
     position: absolute;
     inset: -3px;
-    border-radius: 50%;
+    border-radius: 11px;
     border: 3px solid var(--tomato);
     animation: ring 1.2s ease-out infinite;
   }
   @media (hover: hover) {
-    .rec-key:hover {
-      transform: translate(-1px, -1px) scale(1.03);
-      box-shadow: 5px 5px 0 var(--shadow);
+    .tkey.rec-key:hover:not(:disabled) {
+      background: color-mix(in oklab, var(--tomato), white 12%);
     }
-  }
-  .rec-key:active {
-    transform: translate(4px, 4px);
-    box-shadow: 0 0 0 var(--shadow);
-    transition-duration: 0.04s;
   }
   @keyframes ring {
     from { transform: scale(1); opacity: 0.9; }
-    to { transform: scale(1.45); opacity: 0; }
+    to { transform: scale(1.25, 1.4); opacity: 0; }
   }
   @media (max-width: 699px) {
     .dock {
@@ -393,7 +490,28 @@
       width: 22px;
     }
     .keys {
-      gap: var(--s-2);
+      gap: 6px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .deck {
+      gap: 5px;
+      padding: 6px 6px 7px;
+      margin-right: 0;
+    }
+    .cap {
+      letter-spacing: 0.02em;
+      gap: 3px;
+    }
+    .tkey {
+      width: 44px;
+      height: 48px;
+    }
+    .tkey.play {
+      width: 54px;
+    }
+    .tkey.rec-key {
+      width: 74px;
     }
   }
 </style>

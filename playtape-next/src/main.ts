@@ -1,5 +1,6 @@
 import '@fontsource-variable/bricolage-grotesque';
 import '@fontsource-variable/geist-mono';
+import './styles/fonts.css';
 import './styles/tokens.css';
 import './styles/base.css';
 import { mount } from 'svelte';

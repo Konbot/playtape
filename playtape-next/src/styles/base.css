@@ -65,6 +65,58 @@ p {
   white-space: nowrap;
 }
 
+/* ---- Shared hardware details ---- */
+
+/* Silk-screened panel lettering. */
+.silk {
+  font-size: var(--t-12);
+  font-weight: var(--w-bold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-2);
+}
+
+/* A strip of tape with a name written on it in marker. Set --c for coloured
+   tape. The short ends are torn, and it never sits perfectly straight. */
+.tape {
+  font-family: var(--font-hand);
+  font-size: var(--t-14);
+  font-weight: 400;
+  line-height: 1.15;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--on-track);
+  background: var(--c, var(--tape));
+  /* the faint sheen of a matte tape surface */
+  background-image: linear-gradient(oklch(1 0 0 / 0.16), oklch(1 0 0 / 0) 45%, oklch(0 0 0 / 0.06));
+  padding: 4px 10px 3px;
+  border: 0;
+  border-radius: 0;
+  clip-path: polygon(0 14%, 2px 0, calc(100% - 3px) 0, 100% 20%, calc(100% - 2px) 46%, 100% 72%, calc(100% - 3px) 100%, 3px 100%, 0 80%, 2px 54%, 1px 30%);
+  transform: rotate(var(--tilt, -1.2deg));
+}
+/* While you type on it, the tape lies flat and shows a proper focus ring. */
+input.tape:focus {
+  clip-path: none;
+  transform: none;
+  outline: 3px solid var(--blue);
+  outline-offset: 1px;
+}
+
+/* A panel light. Lit means on or running; --led picks the colour. */
+.led {
+  flex: none;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--led-off);
+  border: 1.5px solid var(--line);
+}
+.led.lit {
+  background: var(--led, var(--led-green));
+  box-shadow: 0 0 0 2px color-mix(in oklab, var(--led, var(--led-green)) 40%, transparent);
+}
+
 /* Calm mode and reduced motion: no animation, no transitions, steady lights. */
 :root[data-calm] *,
 :root[data-calm] *::before,

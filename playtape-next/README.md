@@ -36,7 +36,7 @@ That runs both builds; each also has its own script.
 | Script | Output | What it is |
 |---|---|---|
 | `npm run build` | `dist/` | The installable web app: hashed assets, `manifest.webmanifest`, and `sw.js`, a service worker that caches every file so the app opens offline. Host the folder on any HTTPS address (paths are relative, so a sub-folder such as GitHub Pages works). `npm run preview` serves it at http://127.0.0.1:5184. |
-| `npm run build:single` | `dist-single/index.html` | Everything in one file, about 630 KB, fonts and icon inlined, no service worker. Open it directly, or let `../INSTALL.bat` install it. |
+| `npm run build:single` | `dist-single/index.html` | Everything in one file, about 700 KB, fonts and icon inlined, no service worker. Open it directly, or let `../INSTALL.bat` install it. |
 
 An update to the web app is downloaded in the background and applied only when
 the user presses Reload in the notice, never in the middle of a take.
@@ -67,7 +67,7 @@ them with Share → Project and Import.
 - **Engine**: lookahead master limiter, gapless loop scheduling, persistent track chains with smoothed parameters, deterministic reverb and cabinet impulses, offline mixdown.
 - **From the old app**: the Library offers to bring in what the original PLAYTAPE or TAPE left in this browser (the unsaved-session backup and recently opened project folders), or any project folder you pick.
 - **App**: installable, works offline, lock-screen play/stop controls, screen kept awake while recording.
-- Paper and Night themes, Calm mode.
+- Day and Night themes, Calm mode.
 
 ## Not built yet
 
@@ -105,6 +105,19 @@ tests/         unit tests (Vitest)
 ```
 
 In development, `window.__pt` exposes the app state and engine for inspection in the console.
+
+## The look
+
+The design takes its cues from a 1990s cassette portastudio without imitating one: a putty-grey chassis, black knobs with coloured pointers, olive tape keys in a dark well, an LCD counter, LED meters, and track names written in marker on coloured tape. All of it comes from `src/styles/tokens.css`, which also states the colour rules:
+
+1. The chassis is grey; colour appears only where it means something.
+2. Tomato means recording (or "too loud") and nothing else.
+3. A track has one colour: its tape label, its clips, its strip cap. A muted track's tape goes grey.
+4. A knob's pointer colour says what kind of control it is: orange for tone, pink for loudness, cyan for space and effects, white for position.
+5. A lit LED means something is on or running.
+6. Brand blue marks what is selected, or the main action.
+
+The shared pieces (`.tape`, `.silk`, `.led`) are in `src/styles/base.css`. Marker lettering is for things a person would label by hand, nothing else.
 
 ## Compatibility with TAPE
 
