@@ -23,6 +23,23 @@ function ls(key: string): string | null {
 function lsSet(key: string, value: string): void {
   try { localStorage.setItem(key, value); } catch { /* private mode */ }
 }
+function lsDrop(key: string): void {
+  try { localStorage.removeItem(key); } catch { /* private mode */ }
+}
+
+/** The capture buffer the live monitor asks for, in seconds (the browser's usual one is 0.01). */
+const MONITOR_CAPTURE = 0.003;
+/** The lookahead of the master limiter, which the monitor skips. */
+const LOOKAHEAD = 0.005;
+
+/** Whether this browser lets a page ask for a shorter capture buffer. */
+function canTuneCapture(): boolean {
+  try {
+    return !!(navigator.mediaDevices?.getSupportedConstraints?.() as { latency?: boolean } | undefined)?.latency;
+  } catch {
+    return false;
+  }
+}
 
 class Recorder {
   state: MicState = 'off';
@@ -50,6 +67,17 @@ class Recorder {
   /** Whether the last minute of input is being kept in memory. */
   ringOn = false;
 
+  /** Live monitor: the input is heard through the app while you play. */
+  monitor = ls('playtape_monitor') === '1';
+  /** Monitor level, 0..2 (1 = as loud as it will be recorded). */
+  monitorVol = Math.max(0, Math.min(2, parseFloat(ls('playtape_monitor_vol') ?? '1') || 0));
+  private mon: GainNode | null = null;
+  private monLive = false;
+  private monHeld = false;
+  private monTimer: ReturnType<typeof setTimeout> | undefined;
+  /** Whether the open input was asked for the short capture buffer. */
+  private tuned = false;
+
   /** Context time of the first captured sample of the take in progress, once known. */
   get captureStartTime(): number | null {
     return this.startFrame == null || !engine.ctx ? null : this.startFrame / engine.ctx.sampleRate;
@@ -73,6 +101,10 @@ class Recorder {
       if (!engine.hasWorklets) throw new Error('This browser cannot record here (AudioWorklet unavailable).');
       const audio: MediaTrackConstraints = { echoCancellation: false, noiseSuppression: false, autoGainControl: false, channelCount: { ideal: 2 } };
       if (this.deviceId) audio.deviceId = { exact: this.deviceId };
+      // The capture buffer is part of the delay you hear on the monitor, so ask for a short one.
+      // It can only be chosen when the input is opened. Recording without the monitor keeps the usual buffer.
+      this.tuned = this.monitor && canTuneCapture();
+      if (this.tuned) (audio as { latency?: ConstrainDouble }).latency = { ideal: MONITOR_CAPTURE };
       let stream: MediaStream;
       try {
         stream = await navigator.mediaDevices.getUserMedia({ audio });
@@ -99,12 +131,66 @@ class Recorder {
       this.source.connect(this.node);
       this.node.connect(this.sink);
       this.sink.connect(ctx.destination);
+      this.mon = ctx.createGain();
+      this.mon.gain.value = 0;
+      this.node.connect(this.mon);
+      this.routeMonitor();
       track?.addEventListener('ended', () => this.cool());
       this.state = 'ready';
     } catch (e) {
       this.state = 'off';
       throw e;
     }
+  }
+
+  /** Connect or fade out the monitor path to match the switch. */
+  private routeMonitor(): void {
+    const ctx = engine.ctx;
+    const mon = this.mon;
+    if (!ctx || !mon) return;
+    clearTimeout(this.monTimer);
+    if (this.monitor && !this.monHeld) {
+      if (!this.monLive) { engine.connectMonitor(mon); this.monLive = true; }
+      mon.gain.setTargetAtTime(this.monitorVol, ctx.currentTime, 0.012);
+    } else if (this.monLive) {
+      mon.gain.setTargetAtTime(0, ctx.currentTime, 0.012);
+      // Unplugged once it has faded, so the limiter is again exactly what an export uses.
+      this.monTimer = setTimeout(() => {
+        if (this.mon === mon && this.monLive) { engine.disconnectMonitor(mon); this.monLive = false; }
+      }, 150);
+    }
+  }
+
+  /** Turn the live monitor on or off. Reopens the input when that gets it a shorter (or the usual) capture buffer. */
+  async setMonitor(on: boolean): Promise<void> {
+    this.monitor = on;
+    lsSet('playtape_monitor', on ? '1' : '0');
+    this.routeMonitor();
+    // Not while "Catch that!" is holding a minute of input: reopening would throw it away.
+    if (this.state === 'ready' && !this.ringOn && this.tuned !== (on && canTuneCapture())) {
+      if (!on) await new Promise((r) => setTimeout(r, 70)); // let the monitor fade before the input closes
+      if (this.state !== 'ready' || this.monitor !== on) return; // something else happened meanwhile
+      this.cool();
+      await this.warm();
+    }
+  }
+
+  setMonitorVol(v: number): void {
+    this.monitorVol = Math.max(0, Math.min(2, v));
+    lsSet('playtape_monitor_vol', String(this.monitorVol));
+    this.routeMonitor();
+  }
+
+  /** Silence the monitor for a moment without touching the switch (latency calibration listens to the input). */
+  holdMonitor(held: boolean): void {
+    this.monHeld = held;
+    this.routeMonitor();
+  }
+
+  /** Roughly how late you hear yourself on the monitor, in milliseconds:
+      the round trip in and out of the device, without the limiter's lookahead. */
+  monitorDelayMs(): number {
+    return Math.max(0, this.offsetInfo().ms - (engine.hasWorklets ? LOOKAHEAD * 1000 : 0));
   }
 
   /** Keep (or stop keeping) the last minute of input in memory. */
@@ -197,6 +283,10 @@ class Recorder {
     try { this.source?.disconnect(); } catch { /* fine */ }
     try { this.node?.disconnect(); } catch { /* fine */ }
     try { this.sink?.disconnect(); } catch { /* fine */ }
+    clearTimeout(this.monTimer);
+    try { this.mon?.disconnect(); } catch { /* fine */ }
+    this.mon = null;
+    this.monLive = false;
     this.stream?.getTracks().forEach((t) => t.stop());
     try { this.tuner?.disconnect(); } catch { /* fine */ }
     this.stream = null; this.source = null; this.node = null; this.sink = null; this.tuner = null;
@@ -212,19 +302,28 @@ class Recorder {
   }
 
   private offsetKey(): string { return 'tape_recOffsetMs:' + (this.deviceId || 'default'); }
+  /** The capture buffer (seconds) that the stored offset was measured with. */
+  private latKey(): string { return 'playtape_recOffsetLat:' + (this.deviceId || 'default'); }
 
   /** The offset in use and whether it was measured (or typed in) for this input, or is only an estimate. */
   offsetInfo(): { ms: number; measured: boolean } {
     const stored = ls(this.offsetKey()) ?? (this.deviceId ? null : ls('tape_recOffsetMs'));
-    if (stored != null) return { ms: parseInt(stored, 10) || 0, measured: true };
+    if (stored != null) {
+      // A measured offset belongs to the capture buffer it was measured with. The monitor
+      // opens the input with a shorter one, so follow the difference and takes still line up.
+      const at = parseFloat(ls(this.latKey()) ?? '');
+      const drift = this.state !== 'off' && Number.isFinite(at) ? (this.inputLatency - at) * 1000 : 0;
+      return { ms: Math.round((parseInt(stored, 10) || 0) + drift), measured: true };
+    }
     const ctx = engine.ctx;
     // output path = device latency + the master limiter's 5 ms lookahead
-    const est = (ctx?.baseLatency ?? 0) + (ctx?.outputLatency ?? 0) + this.inputLatency + (engine.hasWorklets ? 0.005 : 0);
+    const est = (ctx?.baseLatency ?? 0) + (ctx?.outputLatency ?? 0) + this.inputLatency + (engine.hasWorklets ? LOOKAHEAD : 0);
     return { ms: Math.round(est * 1000), measured: false };
   }
 
   setOffsetMs(ms: number): void {
     lsSet(this.offsetKey(), String(Math.round(Math.max(-200, Math.min(500, ms)))));
+    if (this.state !== 'off') lsSet(this.latKey(), String(this.inputLatency)); else lsDrop(this.latKey());
   }
 
   /** Audio inputs the browser knows about. Names are only filled in once the mic has been allowed. */

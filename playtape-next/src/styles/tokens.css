@@ -1,11 +1,12 @@
 /* PLAYTAPE design tokens.
 
    The look borrows from a 1990s cassette portastudio without imitating one:
-   a warm putty-grey chassis, black knobs with coloured pointers, olive rubber
-   keys, an LCD counter, and track names written on tape with a marker.
+   a plain grey plastic chassis, black knobs with coloured pointers, olive
+   rubber keys, an LCD counter, and track names written on tape with a marker.
 
    The colour rules, in order of importance:
-   1. The chassis is grey. Colour appears only where it means something.
+   1. The chassis is plain grey plastic, every panel of it. Colour lives on
+      keys, lights, labels and the tape itself, and only where it means something.
    2. Tomato means recording (or "too loud") and nothing else.
    3. A track has one colour: its tape label, its clips, its strip cap.
    4. A control's pointer colour says what kind of control it is (--fn-*).
@@ -61,8 +62,8 @@
   --tomato: oklch(0.66 0.22 28);
   /* Ink, not white: white on tomato is only 3.4:1, ink is 5:1. */
   --on-tomato: oklch(0.21 0.02 270);
-  /* Tomato as a text colour needs to be deeper on putty and lighter at night. */
-  --tomato-text: oklch(0.5 0.21 28);
+  /* Tomato as a text colour needs to be deeper on light grey and lighter at night. */
+  --tomato-text: oklch(0.46 0.2 28);
 
   /* Track palette: matched lightness and chroma so no track shouts.
      Order keeps the hue of the old app's t1..t8 so imported songs look familiar. */
@@ -98,12 +99,18 @@
   --tape: oklch(0.9 0.05 92);         /* plain masking tape */
   --note: oklch(0.94 0.07 98);        /* a yellowed paper note */
 
-  /* ---- Putty theme (default): the chassis in daylight ---- */
-  --bg: oklch(0.885 0.011 85);
-  --bg-sunk: oklch(0.835 0.012 85);
-  --surface: oklch(0.955 0.01 88);
+  /* The grain of moulded plastic: a fine speckle laid over the whole machine
+     (base.css). Dark specks on the light chassis, light ones on the dark. */
+  --grain-dark: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' seed='7' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 2.2 -1'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  --grain-light: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' seed='7' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 2.2 -1'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+
+  /* ---- Day (default): light grey plastic. The greys carry almost no hue, so
+     nothing on the chassis competes with a key, a light or a label. ---- */
+  --bg: oklch(0.84 0.004 95);
+  --bg-sunk: oklch(0.79 0.004 95);
+  --surface: oklch(0.89 0.004 95);
   --text: oklch(0.21 0.02 270);
-  --text-2: oklch(0.38 0.02 270);
+  --text-2: oklch(0.36 0.02 270);
   --line: oklch(0.21 0.02 270);
   --shadow: oklch(0.21 0.02 270);
   --grid: oklch(0.21 0.02 270 / 0.08);
@@ -112,42 +119,48 @@
   --groove-d: oklch(0.21 0.02 270 / 0.3);
   --groove-l: oklch(1 0 0 / 0.55);
   --rec-wash: oklch(0.66 0.22 28 / 0.1);
+  --grain: var(--grain-dark);
+  --grain-a: 0.16;
   color-scheme: light;
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme='paper']) {
-    --bg: oklch(0.31 0.008 80);
-    --bg-sunk: oklch(0.25 0.008 80);
-    --surface: oklch(0.39 0.01 80);
-    --text: oklch(0.955 0.012 85);
-    --text-2: oklch(0.8 0.015 85);
-    --line: oklch(0.1 0.008 80);
-    --shadow: oklch(0.1 0.008 80);
-    --grid: oklch(0.955 0.012 85 / 0.07);
-    --grid-bar: oklch(0.955 0.012 85 / 0.2);
+    --bg: oklch(0.33 0.004 95);
+    --bg-sunk: oklch(0.27 0.004 95);
+    --surface: oklch(0.4 0.004 95);
+    --text: oklch(0.955 0.006 95);
+    --text-2: oklch(0.82 0.008 95);
+    --line: oklch(0.1 0.004 95);
+    --shadow: oklch(0.1 0.004 95);
+    --grid: oklch(0.955 0.006 95 / 0.07);
+    --grid-bar: oklch(0.955 0.006 95 / 0.2);
     --groove-d: oklch(0 0 0 / 0.5);
     --groove-l: oklch(1 0 0 / 0.09);
     --rec-wash: oklch(0.66 0.22 28 / 0.16);
-    --tomato-text: oklch(0.74 0.18 28);
+    --tomato-text: oklch(0.76 0.17 28);
+    --grain: var(--grain-light);
+    --grain-a: 0.12;
     color-scheme: dark;
   }
 }
 
-/* Night: the same chassis with the lights off. */
+/* Night: dark grey plastic, the same machine with the lights off. */
 :root[data-theme='night'] {
-  --bg: oklch(0.31 0.008 80);
-  --bg-sunk: oklch(0.25 0.008 80);
-  --surface: oklch(0.39 0.01 80);
-  --text: oklch(0.955 0.012 85);
-  --text-2: oklch(0.8 0.015 85);
-  --line: oklch(0.1 0.008 80);
-  --shadow: oklch(0.1 0.008 80);
-  --grid: oklch(0.955 0.012 85 / 0.07);
-  --grid-bar: oklch(0.955 0.012 85 / 0.2);
+  --bg: oklch(0.33 0.004 95);
+  --bg-sunk: oklch(0.27 0.004 95);
+  --surface: oklch(0.4 0.004 95);
+  --text: oklch(0.955 0.006 95);
+  --text-2: oklch(0.82 0.008 95);
+  --line: oklch(0.1 0.004 95);
+  --shadow: oklch(0.1 0.004 95);
+  --grid: oklch(0.955 0.006 95 / 0.07);
+  --grid-bar: oklch(0.955 0.006 95 / 0.2);
   --groove-d: oklch(0 0 0 / 0.5);
   --groove-l: oklch(1 0 0 / 0.09);
   --rec-wash: oklch(0.66 0.22 28 / 0.16);
-  --tomato-text: oklch(0.74 0.18 28);
+  --tomato-text: oklch(0.76 0.17 28);
+  --grain: var(--grain-light);
+  --grain-a: 0.12;
   color-scheme: dark;
 }

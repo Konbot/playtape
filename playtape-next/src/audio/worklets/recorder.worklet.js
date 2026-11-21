@@ -1,7 +1,9 @@
 /* Sample-accurate capture (ported from the single-file app's RecProcessor)
    plus an always-on input meter, so the level is visible before recording,
    and an optional ring buffer holding the last minute ("Catch that!").
-   mode: 0 = input 1 (left), 1 = input 2 (right), 2 = both mixed to mono. */
+   mode: 0 = input 1 (left), 1 = input 2 (right), 2 = both mixed to mono.
+   The output carries exactly what would be recorded, so the live monitor
+   plays the socket you chose and nothing else. */
 const RING_SECONDS = 60;
 
 class RecProcessor extends AudioWorkletProcessor {
@@ -59,7 +61,7 @@ class RecProcessor extends AudioWorkletProcessor {
     this.port.postMessage({ type: 'data', samples: out }, [out.buffer]);
   }
 
-  process(inputs) {
+  process(inputs, outputs) {
     const input = inputs[0];
     const a = input && input[0];
     if (!a) return true;
@@ -67,12 +69,14 @@ class RecProcessor extends AudioWorkletProcessor {
     const n = a.length;
     const mode = this.mode;
     const copy = this.recording ? new Float32Array(n) : null;
+    const thru = outputs[0] && outputs[0][0];
     const ring = this.ring;
     let rp = this.ringPos;
     let pk = this.peak;
     for (let i = 0; i < n; i++) {
       const v = mode === 1 && b ? b[i] : mode === 0 || !b ? a[i] : (a[i] + b[i]) * 0.5;
       if (copy) copy[i] = v;
+      if (thru) thru[i] = v;
       if (ring) { ring[rp] = v; rp = rp + 1 === ring.length ? 0 : rp + 1; }
       const av = v < 0 ? -v : v;
       if (av > pk) pk = av;

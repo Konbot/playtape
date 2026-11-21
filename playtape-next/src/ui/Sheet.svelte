@@ -4,6 +4,7 @@
 <script lang="ts">
   import type { Snippet } from 'svelte';
   import { fade, fly } from 'svelte/transition';
+  import { dur } from '../lib/motion';
   import Key from './Key.svelte';
 
   let { title, onclose, children, wide = false }: { title: string; onclose: () => void; children: Snippet; wide?: boolean } = $props();
@@ -33,8 +34,8 @@
 <svelte:window onkeydown={key} />
 
 <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
-<div class="scrim" transition:fade={{ duration: 120 }} onclick={(e) => { if (e.target === e.currentTarget) onclose(); }}>
-  <div class="sheet" class:wide role="dialog" aria-modal="true" aria-label={title} tabindex="-1" bind:this={sheet} transition:fly={{ y: 24, duration: 180 }}>
+<div class="scrim" transition:fade={{ duration: dur(120) }} onclick={(e) => { if (e.target === e.currentTarget) onclose(); }}>
+  <div class="sheet" class:wide role="dialog" aria-modal="true" aria-label={title} tabindex="-1" bind:this={sheet} transition:fly={{ y: 24, duration: dur(180) }}>
     <header>
       <h2>{title}</h2>
       <Key icon="close" tone="plain" label="Close" onclick={onclose} />

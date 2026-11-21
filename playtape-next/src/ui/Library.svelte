@@ -151,8 +151,9 @@
     padding-bottom: calc(var(--s-7) + env(safe-area-inset-bottom));
   }
   .stage {
-    background: var(--brand);
+    background: var(--bg-sunk);
     border-bottom: var(--line-w) solid var(--line);
+    box-shadow: 0 1px 0 var(--groove-l);
     padding: calc(var(--s-4) + env(safe-area-inset-top)) var(--s-4) var(--s-6);
     display: flex;
     flex-direction: column;

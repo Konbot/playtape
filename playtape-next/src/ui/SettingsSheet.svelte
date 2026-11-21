@@ -1,7 +1,7 @@
 <!-- Settings: what you record with, how loud it may get, how it looks.
      (Input and "Enable input" used to sit in the main header.) -->
 <script lang="ts">
-  import { app, setCalm, setCatch, setTheme, type Theme } from '../state.svelte';
+  import { app, setCalm, setCatch, setMonitor, setMonitorVol, setTheme, type Theme } from '../state.svelte';
   import { install, pwa } from '../pwa.svelte';
   import { calibrate, closeSheet, openSheet, setCeiling, setChannel, setInput, setOffset, turnMicOn } from '../tools.svelte';
   import { recorder } from '../audio/recorder';
@@ -50,6 +50,17 @@
         <Seg label="Input socket" value={app.channel} onchange={setChannel} options={[{ value: 2, label: 'Both' }, { value: 0, label: 'Input 1' }, { value: 1, label: 'Input 2' }]} />
       </div>
     {/if}
+    <div class="row">
+      <div class="txt">
+        <b>Monitor</b>
+        <span>Hear your input through the app as you play. Use headphones.{micOn ? ` The delay is about ${app.monitorMs} ms on this device.` : ''}</span>
+      </div>
+      <Switch on={app.monitor} label="Monitor" onchange={(v) => void setMonitor(v)} />
+    </div>
+    <div class="row stack">
+      <div class="txt"><b>Monitor level <span class="mono val">{Math.round(app.monitorVol * 100)}%</span></b><span>How loud you are next to the song. It never changes what is recorded.</span></div>
+      <Fader label="Monitor level" value={app.monitorVol} min={0} max={2} step={0.05} reset={1} oninput={setMonitorVol} />
+    </div>
     <div class="row">
       <div class="txt">
         <b>Timing offset</b>

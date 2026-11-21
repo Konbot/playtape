@@ -26,6 +26,19 @@ body {
   -webkit-tap-highlight-color: transparent;
 }
 
+/* The plastic's grain, over everything and under nothing: it never takes a
+   click, never moves, and is too faint to change how any text reads. */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  pointer-events: none;
+  background-image: var(--grain);
+  background-size: 180px 180px;
+  opacity: var(--grain-a);
+}
+
 button,
 input,
 select {

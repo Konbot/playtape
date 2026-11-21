@@ -3,7 +3,7 @@
   import { QWERTY } from './audio/synth';
   import {
     app, applySettings, deleteSelectedClip, duplicateSelected, importFiles, keyDown, keyUp, recordNewIdea, redo, refreshLibrary,
-    rewind, saveNow, setClick, shiftOctave, splitSelected, stepTake, toggleLoop, toggleRecord, togglePlay, undo,
+    rewind, saveNow, setClick, setMonitor, shiftOctave, splitSelected, stepTake, toggleLoop, toggleRecord, togglePlay, undo,
   } from './state.svelte';
   import { initMediaSession, initPwa, updateMediaSession } from './pwa.svelte';
   import { checkOldData } from './tools.svelte';
@@ -65,6 +65,7 @@
     if (k === 'r') { e.preventDefault(); toggleRecord(); }
     else if (k === 'c') { e.preventDefault(); setClick(!app.click); }
     else if (k === 'l') { e.preventDefault(); toggleLoop(); }
+    else if (k === 'm') { e.preventDefault(); void setMonitor(!app.monitor); }
     else if (k === 's' && app.selected) { e.preventDefault(); splitSelected(); }
     else if (k === 't' && app.selected) { e.preventDefault(); stepTake(1); }
     else if (e.key === 'Home') { e.preventDefault(); rewind(); }

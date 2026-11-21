@@ -1,10 +1,11 @@
 <!-- Transport, anchored at the bottom where thumbs are. A status row (the
      counter, tempo, loop, what Record records) and the keys: three tape keys
      in a well with Record the widest, then the round function keys. Every key
-     has its name printed above it, and Play and Record have a light. -->
+     has its name printed above it, and anything that can be on has a light.
+     On a phone the keys take their width from the screen so the row never wraps. -->
 <script lang="ts">
   import {
-    app, catchThat, fmtTime, loopValid, redo, rewind, setBpm, setClick, setSource, toggleLoop, toggleRecord, togglePlay, undo,
+    app, catchThat, fmtTime, loopValid, redo, rewind, setBpm, setClick, setMonitor, setSource, toggleLoop, toggleRecord, togglePlay, undo,
     type Source,
   } from '../state.svelte';
   import { recorder } from '../audio/recorder';
@@ -130,7 +131,7 @@
     </div>
   </div>
 
-  <div class="keys">
+  <div class="keys" class:four={app.catchOn}>
     <div class="deck" role="group" aria-label="Tape keys">
       <div class="kcol">
         <span class="silk cap" aria-hidden="true">Start</span>
@@ -162,6 +163,10 @@
     <div class="kcol">
       <span class="silk cap" aria-hidden="true"><i class="led" class:lit={app.click} style:--led="var(--led-amber)"></i>Click</span>
       <Key icon="metronome" label={app.click ? 'Click on: count-in before recording (C)' : 'Click off (C)'} round pressed={app.click} onclick={() => setClick(!app.click)} />
+    </div>
+    <div class="kcol">
+      <span class="silk cap" aria-hidden="true"><i class="led" class:lit={app.monitor}></i><span class="wide">Monitor</span><span class="narrow">Mon</span></span>
+      <Key icon="headphones" label={app.monitor ? 'Monitor on: you hear your input as you play (M)' : 'Monitor off: turn on to hear your input as you play (M)'} round pressed={app.monitor} onclick={() => void setMonitor(!app.monitor)} />
     </div>
     {#if app.catchOn}
       <div class="kcol">
@@ -345,19 +350,21 @@
     align-items: center;
     gap: 5px;
   }
-  /* centred on its key and never wider than it as far as layout goes */
+  /* centred on its key; a long name widens its column rather than running into the next */
   .cap {
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 5px;
-    width: 0;
     line-height: 1;
     white-space: nowrap;
   }
   .cap .led {
     width: 8px;
     height: 8px;
+  }
+  .narrow {
+    display: none;
   }
   /* the round function keys are olive rubber, like the tape keys */
   .keys :global(.key:not(.on)) {
@@ -461,11 +468,16 @@
       flex-direction: column;
       gap: var(--s-2);
       padding: var(--s-2) var(--s-3) calc(var(--s-2) + env(safe-area-inset-bottom));
+      /* the keys below are sized in cqi: a share of the dock's own width */
+      container-type: inline-size;
     }
     .status {
       width: 100%;
       justify-content: space-between;
-      gap: 6px;
+      gap: 4px;
+    }
+    .narrow {
+      display: inline;
     }
     .desk,
     .wide,
@@ -477,41 +489,74 @@
       font-size: var(--t-16);
     }
     .clock {
-      padding: 8px 10px;
+      padding: 8px;
     }
     .chip {
-      padding: 0 10px;
+      padding: 0 8px;
     }
     .seg button {
-      min-width: 44px;
+      min-width: min(44px, 12cqi);
       height: 36px;
+      padding: 0 8px;
     }
     .lvl {
-      width: 22px;
+      width: 18px;
     }
     .keys {
       gap: 6px;
-      flex-wrap: wrap;
       justify-content: center;
+    }
+    .keys :global(.key) {
+      --h: min(44px, 12.2cqi);
     }
     .deck {
       gap: 5px;
       padding: 6px 6px 7px;
       margin-right: 0;
     }
+    /* on a phone the name may not take room: it is centred on its key and overhangs it */
     .cap {
+      width: 0;
       letter-spacing: 0.02em;
       gap: 3px;
     }
     .tkey {
-      width: 44px;
+      width: min(44px, 12.2cqi);
       height: 48px;
     }
     .tkey.play {
-      width: 54px;
+      width: min(54px, 15cqi);
     }
     .tkey.rec-key {
-      width: 74px;
+      width: min(74px, 20.5cqi);
+    }
+    /* With "Catch that!" on there are four round keys: everything gives up a little. */
+    .keys.four {
+      gap: 4px;
+    }
+    .keys.four :global(.key) {
+      --h: min(42px, 11cqi);
+    }
+    .keys.four .deck {
+      gap: 4px;
+      padding: 6px 5px 7px;
+    }
+    .keys.four .tkey {
+      width: min(42px, 11cqi);
+    }
+    .keys.four .tkey.play {
+      width: min(52px, 13.4cqi);
+    }
+    .keys.four .tkey.rec-key {
+      width: min(70px, 18.4cqi);
+    }
+    .keys.four .cap {
+      letter-spacing: 0;
+      gap: 2px;
+    }
+    .keys.four .cap .led {
+      width: 7px;
+      height: 7px;
     }
   }
 </style>

@@ -54,6 +54,11 @@ export const app = $state({
   punch: null as { a: number; b: number } | null,
   /** "Catch that!": keep the last minute of mic input in memory. */
   catchOn: ls('playtape_catch', '0') === '1',
+  /** Live monitor: the input is heard through the app while you play. */
+  monitor: recorder.monitor,
+  monitorVol: recorder.monitorVol,
+  /** About how late you hear yourself on the monitor, in ms. */
+  monitorMs: 0,
   selected: null as { trackId: number; clipId: number } | null,
   /** Track the next take goes to; null means a new track. */
   target: null as number | null,
@@ -888,6 +893,34 @@ export async function stopRecording(): Promise<void> {
 
 export function toggleRecord(): void {
   void (app.recording ? stopRecording() : startRecording());
+}
+
+/* ---------- live monitor ---------- */
+
+/** Hear the input through the app while playing (a plugged-in guitar, a keyboard, a mic on headphones). */
+export async function setMonitor(on: boolean): Promise<void> {
+  app.monitor = on;
+  try {
+    await recorder.setMonitor(on);
+    if (on && app.route === 'song' && recorder.state === 'off') {
+      await engine.ensure();
+      recorder.ringOn = app.catchOn;
+      await recorder.warm();
+    }
+  } catch (e) {
+    toast(micError(e), { kind: 'error' });
+  }
+  app.mic = recorder.state;
+  app.monitorMs = recorder.monitorDelayMs();
+  if (on && ls('playtape_monitor_tip', '0') !== '1') {
+    lsSet('playtape_monitor_tip', '1');
+    toast('Monitor on: you hear your input as you play. Use headphones, or a microphone will feed back.', { timeout: 7000 });
+  }
+}
+
+export function setMonitorVol(v: number): void {
+  recorder.setMonitorVol(v);
+  app.monitorVol = recorder.monitorVol;
 }
 
 /* ---------- Catch that! ---------- */

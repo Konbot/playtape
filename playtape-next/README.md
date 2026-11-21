@@ -54,6 +54,7 @@ them with Share → Project and Import.
 
 - **Library** of cassettes with one-tap **Record new idea**, rename, delete with undo, import of `.tape` and audio files.
 - **Capture view**: live waveform while recording, visible count-in, input meter, click with tap tempo, mute/solo, **+ Track**, record onto a chosen track, undo/redo for everything, autosave after every change.
+- **Monitor**: a key in the dock that plays the input back while you play, for plugged-in instruments. It joins the output after the limiter's lookahead delay (still under the ceiling) and opens the input with a short capture buffer where the browser allows it; Settings shows the remaining delay and has a monitor level.
 - **Clip editing**: drag to move (also between tracks), drag the edges to trim, split at the playhead, duplicate, delete, with snapping to clip edges, the playhead, the loop, and the grid when the click is on (hold Alt to move freely). On touch: tap a clip to select it, then drag it or its handles; pinch to zoom.
 - **Loop and punch-in**: a loop bar on the ruler (drag its ends or the bar). With the loop on, Record rolls in early and keeps only the loop region.
 - **Takes**: recording over a clip keeps the earlier pass inside it; switch with the Take arrows.
@@ -63,8 +64,8 @@ them with Share → Project and Import.
 - **Mix view**: channel strips on desktop, expandable rows on a phone. Per track: level, mute, solo, three-band EQ, Tighten (compressor), Reverb, Pan, Trim lows, Shift timing. Master level and reverb room. A song overview strip to jump around.
 - **Pedals**: Drive, Cabinet, Echo and Tremolo per track, docked above the transport so playback keeps running while you turn knobs. Never printed into the recording.
 - **Share**: MP3 (encoded in a worker), WAV, stems as one zip, or the project as a `.tape` file; uses the system share sheet where the device has one. An exported song gets a sticker on its cassette.
-- **Settings**: input device and socket, timing offset with a click-and-listen Calibrate, Catch that!, loudness ceiling, theme, Calm mode. **Tuner** for guitar, bass or voice.
-- **Engine**: lookahead master limiter, gapless loop scheduling, persistent track chains with smoothed parameters, deterministic reverb and cabinet impulses, offline mixdown.
+- **Settings**: input device and socket, Monitor and its level, timing offset with a click-and-listen Calibrate, Catch that!, loudness ceiling, theme, Calm mode. **Tuner** for guitar, bass or voice.
+- **Engine**: lookahead master limiter with a no-delay monitor input, gapless loop scheduling, persistent track chains with smoothed parameters, deterministic reverb and cabinet impulses, offline mixdown.
 - **From the old app**: the Library offers to bring in what the original PLAYTAPE or TAPE left in this browser (the unsaved-session backup and recently opened project folders), or any project folder you pick.
 - **App**: installable, works offline, lock-screen play/stop controls, screen kept awake while recording.
 - Day and Night themes, Calm mode.
@@ -80,12 +81,14 @@ them with Share → Project and Import.
 
 Built and tested in a desktop browser with a synthetic microphone. Still to be
 confirmed on real devices: installing and offline use (the service worker),
-microphone latency and input switching on an audio interface, touch gestures on
-a phone, the phone share sheet, and a hardware MIDI keyboard.
+microphone latency and input switching on an audio interface, how short the
+monitor delay really is on an interface (and whether the shorter capture buffer
+is honoured there), touch gestures on a phone, the phone share sheet, and a
+hardware MIDI keyboard.
 
 ## Shortcuts
 
-Space play/stop · R or Enter record · L loop · C click · S split · T next take ·
+Space play/stop · R or Enter record · L loop · C click · M monitor · S split · T next take ·
 Ctrl+D duplicate · Delete remove clip · Ctrl+Z / Ctrl+Shift+Z undo/redo · Home back to start.
 With Keys open, Z–M and Q–I play notes (so use Enter to record) and the up/down arrows change octave.
 
@@ -108,9 +111,9 @@ In development, `window.__pt` exposes the app state and engine for inspection in
 
 ## The look
 
-The design takes its cues from a 1990s cassette portastudio without imitating one: a putty-grey chassis, black knobs with coloured pointers, olive tape keys in a dark well, an LCD counter, LED meters, and track names written in marker on coloured tape. All of it comes from `src/styles/tokens.css`, which also states the colour rules:
+The design takes its cues from a 1990s cassette portastudio without imitating one: a plain grey plastic chassis (light by day, dark at night) with a faint moulded grain, black knobs with coloured pointers, olive tape keys in a dark well, an LCD counter, LED meters, and track names written in marker on coloured tape. All of it comes from `src/styles/tokens.css`, which also states the colour rules:
 
-1. The chassis is grey; colour appears only where it means something.
+1. The chassis is plain grey plastic, every panel of it; colour lives on keys, lights, labels and the tape itself, and only where it means something.
 2. Tomato means recording (or "too loud") and nothing else.
 3. A track has one colour: its tape label, its clips, its strip cap. A muted track's tape goes grey.
 4. A knob's pointer colour says what kind of control it is: orange for tone, pink for loudness, cyan for space and effects, white for position.

@@ -29,10 +29,11 @@ export async function addWorklets(actx: BaseAudioContext): Promise<boolean> {
 
 /** Master limiter for any context. Falls back to the old compressor-style
     limiter only where AudioWorklet is unavailable. */
-export function createLimiter(actx: BaseAudioContext, hasWorklets: boolean, ceiling: number): { node: AudioNode; setCeiling: (v: number) => void } {
+export function createLimiter(actx: BaseAudioContext, hasWorklets: boolean, ceiling: number, monitorInput = false): { node: AudioNode; setCeiling: (v: number) => void } {
   if (hasWorklets) {
     const node = new AudioWorkletNode(actx, 'pt-limiter', {
-      numberOfInputs: 1, numberOfOutputs: 1, outputChannelCount: [2],
+      // the second input is the live monitor (see limiter.worklet.js); exports never have one
+      numberOfInputs: monitorInput ? 2 : 1, numberOfOutputs: 1, outputChannelCount: [2],
       channelCount: 2, channelCountMode: 'explicit', channelInterpretation: 'speakers',
     });
     const p = node.parameters.get('ceiling')!;
@@ -94,7 +95,7 @@ class Engine {
       this.drumBus.gain.value = 0.9 * DRUM_TRIM;
       this.drumBus.connect(this.master);
       this.hasWorklets = await addWorklets(ctx);
-      this.limiter = createLimiter(ctx, this.hasWorklets, CEILING * this.userCeiling);
+      this.limiter = createLimiter(ctx, this.hasWorklets, CEILING * this.userCeiling, true);
       this.master.connect(this.limiter.node);
       this.limiter.node.connect(this.masterAnalyser);
       this.limiter.node.connect(ctx.destination);
@@ -114,6 +115,15 @@ class Engine {
   setCeiling(v: number): void {
     this.userCeiling = Math.max(0.2, Math.min(1, v));
     this.limiter?.setCeiling(CEILING * this.userCeiling);
+  }
+
+  /** Feed a live input in after the limiter's lookahead delay, still under the ceiling. */
+  connectMonitor(node: AudioNode): void {
+    if (this.hasWorklets) node.connect(this.limiter.node, 0, 1);
+  }
+
+  disconnectMonitor(node: AudioNode): void {
+    try { node.disconnect(this.limiter.node, 0, 1); } catch { /* was not connected */ }
   }
 
   setReverbType(type: ReverbType): void {

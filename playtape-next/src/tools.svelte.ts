@@ -47,6 +47,7 @@ function syncOffset(): void {
   const o = recorder.offsetInfo();
   app.offsetMs = o.ms;
   app.offsetMeasured = o.measured;
+  app.monitorMs = recorder.monitorDelayMs();
 }
 
 export async function refreshInputs(): Promise<void> {
@@ -102,6 +103,7 @@ export async function calibrate(): Promise<void> {
     app.mic = recorder.state;
     await engine.resume();
     const ctx = engine.ctx!;
+    recorder.holdMonitor(true); // or the clicks come round again through the monitor
     recorder.start();
     const begin = ctx.currentTime + 0.35;
     const emits = Array.from({ length: 8 }, (_, i) => begin + i * 0.5);
@@ -120,6 +122,7 @@ export async function calibrate(): Promise<void> {
   } catch (e) {
     toast(micError(e), { kind: 'error' });
   } finally {
+    recorder.holdMonitor(false);
     app.calibrating = false;
     app.mic = recorder.state;
     syncOffset();

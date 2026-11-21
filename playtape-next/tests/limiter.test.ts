@@ -65,3 +65,58 @@ describe('master limiter', () => {
     expect(proc.env).toBeGreaterThan(0.99);
   });
 });
+
+/* The second input is the live monitor: it joins after the delay line. */
+function runWithMonitor(proc: any, input: Float32Array, monitor: Float32Array | null, ceiling: number): Float32Array {
+  const out = new Float32Array(input.length);
+  for (let i = 0; i < input.length; i += 128) {
+    const inL = input.subarray(i, i + 128);
+    const mon = monitor ? [monitor.subarray(i, i + 128), monitor.subarray(i, i + 128)] : [];
+    const oL = new Float32Array(128);
+    const oR = new Float32Array(128);
+    proc.process([[inL, inL], mon], [[oL, oR]], { ceiling: [ceiling] });
+    out.set(oL, i);
+  }
+  return out;
+}
+
+describe('live monitor input', () => {
+  const rate = 48000;
+  const n = 128 * 80;
+
+  it('is heard at once: no lookahead delay on the monitor', () => {
+    const silence = new Float32Array(n);
+    const mon = new Float32Array(n);
+    for (let i = 0; i < n; i++) mon[i] = Math.sin(i * 0.07) * 0.3;
+    const out = runWithMonitor(loadLimiter(rate), silence, mon, 0.89);
+    for (let i = 0; i < n; i += 53) expect(out[i]).toBeCloseTo(mon[i], 6);
+  });
+
+  it('keeps the song plus the monitor under the ceiling', () => {
+    const song = new Float32Array(n);
+    const mon = new Float32Array(n);
+    for (let i = 0; i < n; i++) { song[i] = Math.sin(i * 0.31) * 0.85; mon[i] = Math.sin(i * 0.047) * 1.6; }
+    mon[4000] = 6; // a pick scrape
+    const out = runWithMonitor(loadLimiter(rate), song, mon, 0.89);
+    let max = 0;
+    for (const v of out) max = Math.max(max, Math.abs(v));
+    expect(max).toBeLessThanOrEqual(0.89 + 1e-6);
+  });
+
+  it('leaves the song exactly as it was while nothing is plugged into the monitor input', () => {
+    const song = new Float32Array(n);
+    for (let i = 0; i < n; i++) song[i] = Math.sin(i * 0.31) * (i > 3000 && i < 6000 ? 2.5 : 0.4);
+    const plain = run(loadLimiter(rate), song, 0.89);
+    const withInput = runWithMonitor(loadLimiter(rate), song, null, 0.89);
+    for (let i = 0; i < n; i++) expect(withInput[i]).toBe(plain[i]);
+  });
+
+  it('lets go again once the monitor goes quiet', () => {
+    const silence = new Float32Array(rate);
+    const mon = new Float32Array(rate);
+    for (let i = 0; i < 2000; i++) mon[i] = 3;
+    const proc = loadLimiter(rate);
+    runWithMonitor(proc, silence, mon, 0.89);
+    expect(proc.env2).toBeGreaterThan(0.999);
+  });
+});

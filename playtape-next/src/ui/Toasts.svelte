@@ -1,12 +1,13 @@
 <script lang="ts">
   import { fly } from 'svelte/transition';
+  import { dur } from '../lib/motion';
   import { dismiss, toasts } from '../lib/toast.svelte';
   import Icon from './Icon.svelte';
 </script>
 
 <div class="toasts" role="status" aria-live="polite">
   {#each toasts as t (t.id)}
-    <div class="toast {t.kind}" transition:fly={{ y: 16, duration: 180 }}>
+    <div class="toast {t.kind}" transition:fly={{ y: 16, duration: dur(180) }}>
       {#if t.kind === 'error'}<Icon name="warning" size={20} />{:else if t.kind === 'ok'}<Icon name="check" size={20} />{/if}
       <span class="msg">{t.message}</span>
       {#if t.action}

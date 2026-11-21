@@ -92,6 +92,25 @@ The big round key in the dock at the bottom is Record. Press it (or `R`, or
   to a new track per take. **+ Track** under the last lane adds an empty one.
 - On a phone the screen is kept awake during a take.
 
+### Hearing yourself (Monitor)
+
+The **Monitor** key in the dock (or `M`) plays your input back to you while
+you play, for a guitar, bass or keyboard plugged into an audio interface. Its
+light is on while it is on. Wear headphones: with a microphone and speakers
+it feeds back.
+
+- The monitor takes the shortest road through the app: it skips the limiter's
+  5 ms lookahead and opens the input with a shorter buffer where the browser
+  allows it. What you hear is still held under the loudness ceiling.
+- There is always some delay, because sound has to travel into the computer
+  and out again. Settings shows roughly how much on your device. A wired
+  interface is usually fine; Bluetooth headphones are always too slow for
+  playing along.
+- If your interface has its own "direct monitor" switch or knob, that has no
+  delay at all. Use it and leave Monitor off, or you will hear yourself twice.
+- **Monitor level** in Settings sets how loud you are next to the song. It
+  never changes what is recorded.
+
 Nothing needs saving. Each take is written to storage the moment it ends, and
 every other change is saved a moment after you make it.
 
@@ -170,7 +189,7 @@ your downloads.
 The gear at the top of a song opens Settings:
 
 - **Recording**: input device and socket (Both, Input 1 or Input 2, for audio
-  interfaces), the timing offset with **Calibrate** (it plays clicks and
+  interfaces), **Monitor** and its level, the timing offset with **Calibrate** (it plays clicks and
   listens for them, so put the mic near the speaker), Catch that!, and the
   **Tuner**, which listens to the mic and shows the nearest note for a guitar,
   a bass or your voice.
@@ -213,6 +232,7 @@ the `.tape` file somewhere safe. It imports back with everything intact.
 | `Home` | Back to the start |
 | `L` | Loop on / off |
 | `C` | Click on / off |
+| `M` | Monitor on / off |
 | `S` | Split the selected clip at the playhead |
 | `T` | Next take |
 | `Ctrl+D` | Duplicate the selected clip |
@@ -230,6 +250,11 @@ address bar, allow the microphone, and press Record again.
 **My playing lands early or late against the click.** Settings → Recording →
 Calibrate, with the mic near the speaker. With headphones, hold one earcup to
 the mic. The offset is remembered per input device.
+
+**I hear myself late on the monitor.** That delay belongs to the sound device,
+not the app. Use a wired audio interface rather than the built-in sound or
+Bluetooth, close other programs that are playing sound, and prefer the
+interface's own direct-monitor switch if it has one.
 
 **The Library is empty after I moved to a different icon or address.** It is a
 separate Library (see [Where your songs live](#where-your-songs-live)). Open
