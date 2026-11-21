@@ -2,7 +2,8 @@
      counter, tempo, loop, what Record records) and the keys: three tape keys
      in a well with Record the widest, then the round function keys. Every key
      has its name printed above it, and anything that can be on has a light.
-     On a phone the keys take their width from the screen so the row never wraps. -->
+     On a phone the keys take their width from the screen so the row never wraps;
+     with the phone on its side everything sits in one low row. -->
 <script lang="ts">
   import {
     app, catchThat, fmtTime, loopValid, redo, rewind, setBpm, setClick, setMonitor, setSource, toggleLoop, toggleRecord, togglePlay, undo,
@@ -557,6 +558,102 @@
     .keys.four .cap .led {
       width: 7px;
       height: 7px;
+    }
+  }
+  /* the narrowest phones, and phones set to large display text */
+  @media (max-width: 345px) {
+    .status {
+      gap: 3px;
+    }
+    .clock {
+      padding: 8px 5px;
+    }
+    .time {
+      font-size: var(--t-14);
+    }
+    .chip {
+      padding: 0 6px;
+    }
+    .seg button {
+      padding: 0 6px;
+    }
+  }
+  /* A phone on its side: height is what is scarce, so the status and the keys
+     share one row and the printed names go (every key still says what it is to
+     a screen reader, and a key that is on is blue). */
+  @media (orientation: landscape) and (max-height: 520px) {
+    .dock {
+      flex-direction: row;
+      flex-wrap: wrap;
+      gap: 6px 10px;
+      padding: 6px var(--s-3) calc(6px + env(safe-area-inset-bottom));
+      container-type: inline-size;
+    }
+    .status {
+      width: auto;
+      flex: none;
+      gap: 5px;
+    }
+    .cap,
+    .desk,
+    .wide,
+    .bar,
+    .unit {
+      display: none;
+    }
+    .time {
+      font-size: var(--t-16);
+    }
+    .clock {
+      padding: 7px 8px;
+    }
+    .chip {
+      height: 38px;
+      padding: 0 8px;
+    }
+    .seg button {
+      min-width: 38px;
+      height: 34px;
+      padding: 0 7px;
+    }
+    .lvl {
+      width: 16px;
+    }
+    .keys,
+    .keys.four {
+      gap: 6px;
+      align-items: center;
+    }
+    .keys :global(.key) {
+      --h: min(44px, 5.4cqi);
+    }
+    .deck,
+    .keys.four .deck {
+      gap: 5px;
+      padding: 5px 6px 6px;
+      margin-right: 0;
+    }
+    .tkey {
+      width: min(48px, 5.6cqi);
+      height: 42px;
+    }
+    .tkey.play {
+      width: min(58px, 6.8cqi);
+    }
+    .tkey.rec-key {
+      width: min(78px, 9.2cqi);
+    }
+    .keys.four :global(.key) {
+      --h: min(44px, 5cqi);
+    }
+    .keys.four .tkey {
+      width: min(48px, 5cqi);
+    }
+    .keys.four .tkey.play {
+      width: min(58px, 6cqi);
+    }
+    .keys.four .tkey.rec-key {
+      width: min(78px, 8.2cqi);
     }
   }
 </style>

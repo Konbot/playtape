@@ -230,10 +230,19 @@
     display: flex;
     flex-direction: column;
   }
+  /* The panel above the transport gives way (and scrolls) before the screen runs out. */
   .bottom {
     flex: none;
     position: relative;
     z-index: 20;
+    display: flex;
+    flex-direction: column;
+    max-height: calc(100% - 104px);
+  }
+  .bottom > :global(.panel) {
+    flex: 0 1 auto;
+    min-height: 0;
+    overflow-y: auto;
   }
   .clipbar {
     position: absolute;
@@ -330,6 +339,34 @@
     }
     .len {
       display: none;
+    }
+  }
+  /* A phone on its side: height is what is scarce. */
+  @media (orientation: landscape) and (max-height: 520px) {
+    .bar {
+      padding-block: calc(4px + env(safe-area-inset-top)) 4px;
+    }
+    .bar :global(.key) {
+      --h: 38px;
+    }
+    .seg button {
+      height: 30px;
+    }
+    .title {
+      padding-block: 3px;
+    }
+    .bottom {
+      max-height: calc(100% - 84px);
+    }
+    .countin {
+      width: 120px;
+      height: 120px;
+      margin: -60px 0 0 -60px;
+      font-size: 4rem;
+    }
+    .clipbar {
+      bottom: 6px;
+      padding: 5px;
     }
   }
 </style>

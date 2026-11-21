@@ -91,6 +91,9 @@ The big round key in the dock at the bottom is Record. Press it (or `R`, or
   track's header first ("Record onto this track"). Press it again to go back
   to a new track per take. **+ Track** under the last lane adds an empty one.
 - On a phone the screen is kept awake during a take.
+- Turn the phone on its side for a wider timeline: the transport drops to one
+  low row. The page itself never zooms; pinch with two fingers to zoom the
+  timeline.
 
 ### Hearing yourself (Monitor)
 

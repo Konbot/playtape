@@ -1,6 +1,9 @@
 import '@fontsource-variable/bricolage-grotesque';
 import '@fontsource-variable/geist-mono';
 import './styles/fonts.css';
+
+// Safari's own pinch gesture zooms the whole page; the timeline has its own pinch.
+for (const type of ['gesturestart', 'gesturechange']) document.addEventListener(type, (e) => e.preventDefault());
 import './styles/tokens.css';
 import './styles/base.css';
 import { mount } from 'svelte';

@@ -68,6 +68,7 @@ them with Share → Project and Import.
 - **Engine**: lookahead master limiter with a no-delay monitor input, gapless loop scheduling, persistent track chains with smoothed parameters, deterministic reverb and cabinet impulses, offline mixdown.
 - **From the old app**: the Library offers to bring in what the original PLAYTAPE or TAPE left in this browser (the unsaved-session backup and recently opened project folders), or any project folder you pick.
 - **App**: installable, works offline, lock-screen play/stop controls, screen kept awake while recording.
+- **Phones**: the app fills exactly the visible screen in either orientation and cannot be zoomed or scrolled as a page (two fingers zoom the timeline instead). On its side the transport becomes one low row and the Mix view uses the phone rows.
 - Day and Night themes, Calm mode.
 
 ## Not built yet

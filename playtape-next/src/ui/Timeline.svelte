@@ -17,9 +17,12 @@
   const RULER_H = 36;
 
   let winW = $state(window.innerWidth);
-  const narrow = $derived(winW < 700);
+  let winH = $state(window.innerHeight);
+  // a phone, upright or on its side
+  const narrow = $derived(winW < 700 || winH < 520);
+  const low = $derived(winH < 520);
   const headW = $derived(narrow ? 104 : 184);
-  const laneH = $derived(narrow ? 92 : 100);
+  const laneH = $derived(low ? 84 : narrow ? 92 : 100);
   const clipH = $derived(laneH - 16);
 
   let scroller: HTMLDivElement | undefined = $state();
@@ -225,7 +228,7 @@
   function toggleTarget(t: Track) { app.target = app.target === t.id ? null : t.id; }
 </script>
 
-<svelte:window bind:innerWidth={winW} />
+<svelte:window bind:innerWidth={winW} bind:innerHeight={winH} />
 
 <div
   class="tl"
@@ -651,7 +654,7 @@
   .rec .cap {
     background: var(--tomato);
   }
-  @media (max-width: 699px) {
+  @media (max-width: 699px), (orientation: landscape) and (max-height: 520px) {
     .head {
       padding: 6px 8px 6px 12px;
     }

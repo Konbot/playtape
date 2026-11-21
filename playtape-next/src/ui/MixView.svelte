@@ -16,7 +16,9 @@
 
   const song = $derived(app.song!);
   let winW = $state(window.innerWidth);
-  const narrow = $derived(winW < 700);
+  let winH = $state(window.innerHeight);
+  // a phone, upright or on its side: rows that open, not full-height strips
+  const narrow = $derived(winW < 700 || winH < 520);
   /** Phone: which track's details are open. */
   let open = $state<number | null>(null);
 
@@ -54,7 +56,7 @@
   function togglePedals(t: Track) { app.fxTrack = app.fxTrack === t.id ? null : t.id; }
 </script>
 
-<svelte:window bind:innerWidth={winW} />
+<svelte:window bind:innerWidth={winW} bind:innerHeight={winH} />
 
 {#snippet k(t: Track, key: keyof TrackParams, label: string, min: number, max: number, def: number, unit: string, size: number, fn: 'tone' | 'level' | 'fx' | 'pos')}
   <Knob

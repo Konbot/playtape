@@ -220,4 +220,18 @@
       height: 120px;
     }
   }
+  @media (orientation: landscape) and (max-height: 520px) {
+    .panel {
+      padding-block: 4px 6px;
+    }
+    .hint {
+      display: none;
+    }
+    .top {
+      margin-bottom: 4px;
+    }
+    .bed {
+      height: 96px;
+    }
+  }
 </style>

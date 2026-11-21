@@ -150,6 +150,12 @@
     overflow-y: auto;
     padding-bottom: calc(var(--s-7) + env(safe-area-inset-bottom));
   }
+  @media (orientation: landscape) and (max-height: 520px) {
+    .stage {
+      gap: var(--s-3);
+      padding-bottom: var(--s-4);
+    }
+  }
   .stage {
     background: var(--bg-sunk);
     border-bottom: var(--line-w) solid var(--line);
